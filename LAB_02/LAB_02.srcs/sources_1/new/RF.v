@@ -19,16 +19,16 @@ module RF(write, clk, reset_n, addr1, addr2, addr3, data1, data2, data3);
     end
 
     always @(posedge clk or negedge reset_n) begin
-        if(reset_n) begin
-            if(write) begin
-                register[addr3] <= data3;
-            end
-        end
-        else begin
+        if(!reset_n) begin
             register [0] <= 16'b0;
             register [1] <= 16'b0;
             register [2] <= 16'b0;
             register [3] <= 16'b0;
+        end
+        else begin
+            if(write) begin
+                register[addr3] <= data3;
+            end
         end
     end
 endmodule
