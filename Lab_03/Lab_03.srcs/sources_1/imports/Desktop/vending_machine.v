@@ -42,28 +42,23 @@ module vending_machine(
     assign kkCoinValue[2] = 1000;
 
     // Internal states. You may add your own reg variables.
-    reg [`kTotalBits - 1:0] current_total;
     reg [`kCoinBits - 1:0] num_coins [`kNumCoins - 1:0]; // use if needed
     // Combinational circuit for the next states
     always @(*) begin
-        current_total = num_coins[0] * kkCoinValue[0] + num_coins[1] * kkCoinValue[1] + num_coins[2] * kkCoinValue[2];
+        o_current_total = num_coins[0] * kkCoinValue[0] + num_coins[1] * kkCoinValue[1] + num_coins[2] * kkCoinValue[2];
     end
     // Combinational circuit for the output
     always @(*) begin
-        o_current_total = current_total;
         o_output_item = i_select_item & o_available_item;
-        o_available_item[0] = (current_total >= kkItemPrice[0]) ? 1 : 0;
-        o_available_item[1] = (current_total >= kkItemPrice[1]) ? 1 : 0;
-        o_available_item[2] = (current_total >= kkItemPrice[2]) ? 1 : 0;
-        o_available_item[3] = (current_total >= kkItemPrice[3]) ? 1 : 0;
+        o_available_item[0] = (o_current_total >= kkItemPrice[0]) ? 1 : 0;
+        o_available_item[1] = (o_current_total >= kkItemPrice[1]) ? 1 : 0;
+        o_available_item[2] = (o_current_total >= kkItemPrice[2]) ? 1 : 0;
+        o_available_item[3] = (o_current_total >= kkItemPrice[3]) ? 1 : 0;
     end
 
     // Sequential circuit to reset or update the states
     always @(posedge clk) begin
         if (!reset_n) begin
-            o_available_item <= 0;
-            o_current_total <= 0;
-            o_output_item <= 0;
             o_return_coin <= 0;
             num_coins[0] <= 0;
             num_coins[1] <= 0;
@@ -90,49 +85,51 @@ module vending_machine(
                     num_coins[2]<=num_coins[2]+1;
                     num_coins[1]<= num_coins[1]-2;
                 end
-                ///////////////////////////////////////////////////////////////////////////////////
-                case (i_input_coin) //input
-                    3'b001 :
-                        num_coins[0] <= num_coins[0] +1;
-                    3'b010 :
-                        num_coins[1] <= num_coins[1] +1;
-                    3'b100 :
-                        num_coins[2] <= num_coins[2] +1;
-                endcase
-                ////////////////////////////////////////////////////////////////////////////////////
-                case (o_output_item) //output
-                    4'b0001 : begin
-                        if(num_coins[0]<4) begin
-                            if(num_coins[1]==1) begin
-                                num_coins[1]<=num_coins[1]-1;
-                                num_coins[0] <= num_coins[0]+1;
+                else if(i_input_coin) begin
+                    case (i_input_coin) //input
+                        3'b001 :
+                            num_coins[0] <= num_coins[0] +1;
+                        3'b010 :
+                            num_coins[1] <= num_coins[1] +1;
+                        3'b100 :
+                            num_coins[2] <= num_coins[2] +1;
+                    endcase
+                end
+                else begin
+                    case (o_output_item) //output
+                        4'b0001 : begin
+                            if(num_coins[0]<4) begin
+                                if(num_coins[1]==1) begin
+                                    num_coins[1]<=num_coins[1]-1;
+                                    num_coins[0] <= num_coins[0]+1;
+                                end
+                                else begin
+                                    num_coins[2] <= num_coins[2] -1;
+                                    num_coins[1] <= num_coins[1] + 1;
+                                    num_coins[0] <= num_coins[0] + 1;
+                                end
                             end
                             else begin
-                                num_coins[2] <= num_coins[2] -1;
-                                num_coins[1] <= num_coins[1] + 1;
-                                num_coins[0] <= num_coins[0] + 1;
+                                num_coins[0] <= num_coins[0] - 4;
                             end
                         end
-                        else begin
-                            num_coins[0] <= num_coins[0] - 4;
+                        4'b0010 : begin
+                            if(num_coins[1]==0) begin
+                                num_coins[2] <= num_coins[2] - 1;
+                                num_coins[1] <= num_coins[1] + 1;
+                            end
+                            else begin
+                                num_coins[1] <= num_coins[1]-1;
+                            end
                         end
-                    end
-                    4'b0010 : begin
-                        if(num_coins[1]==0) begin
+                        4'b0100 : begin
                             num_coins[2] <= num_coins[2] - 1;
-                            num_coins[1] <= num_coins[1] + 1;
                         end
-                        else begin
-                            num_coins[1] <= num_coins[1]-1;
+                        4'b1000 : begin
+                            num_coins[2] <= num_coins[2] - 2;
                         end
-                    end
-                    4'b0100 : begin
-                        num_coins[2] <= num_coins[2] - 1;
-                    end
-                    4'b1000 : begin
-                        num_coins[2] <= num_coins[2] - 2;
-                    end
-                endcase
+                    endcase
+                end
             end
         end
     end
