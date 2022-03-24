@@ -59,7 +59,8 @@ module vending_machine(
     // Sequential circuit to reset or update the states
     always @(posedge clk) begin
         if (!reset_n) begin
-            o_return_coin <= 0;
+            o_return_coin
+                <= 0;
             num_coins[0] <= 0;
             num_coins[1] <= 0;
             num_coins[2] <= 0;
@@ -72,39 +73,40 @@ module vending_machine(
                 num_coins[2] <= 0;
             end
             else begin
-                if(num_coins[0]>=5&&num_coins[1]==1)begin
-                    num_coins[0]<=num_coins[0]-5;
-                    num_coins[1]<=num_coins[1]-1;
-                    num_coins[2]<=num_coins[2]+1;
+                if (num_coins[0] >= 5 && num_coins[1] == 1) begin
+                    num_coins[0] <= num_coins[0] - 5;
+                    num_coins[1] <= num_coins[1] - 1;
+                    num_coins[2] <= num_coins[2] + 1;
                 end
-                else if(num_coins[0]>=5) begin
-                    num_coins[1]<=num_coins[1]+1;
-                    num_coins[0]<=num_coins[0]-5;
+                else if (num_coins[0] >= 5) begin
+                    num_coins[1] <= num_coins[1] + 1;
+                    num_coins[0] <= num_coins[0] - 5;
                 end
-                else if(num_coins[1]>=2) begin
-                    num_coins[2]<=num_coins[2]+1;
-                    num_coins[1]<= num_coins[1]-2;
+                else if (num_coins[1] >= 2) begin
+                    num_coins[2] <= num_coins[2] + 1;
+                    num_coins[1] <= num_coins[1] - 2;
                 end
-                else if(i_input_coin) begin
-                    case (i_input_coin) //input
+                else if (i_input_coin) begin
+                    case (i_input_coin) // input
                         3'b001 :
-                            num_coins[0] <= num_coins[0] +1;
+                            num_coins[0] <= num_coins[0] + 1;
                         3'b010 :
-                            num_coins[1] <= num_coins[1] +1;
+                            num_coins[1] <= num_coins[1] + 1;
                         3'b100 :
-                            num_coins[2] <= num_coins[2] +1;
+                            num_coins[2] <= num_coins[2] + 1;
                     endcase
+
                 end
                 else begin
-                    case (o_output_item) //output
+                    case (o_output_item) // output
                         4'b0001 : begin
-                            if(num_coins[0]<4) begin
-                                if(num_coins[1]==1) begin
-                                    num_coins[1]<=num_coins[1]-1;
-                                    num_coins[0] <= num_coins[0]+1;
+                            if (num_coins[0] < 4) begin
+                                if (num_coins[1] == 1) begin
+                                    num_coins[1] <= num_coins[1] - 1;
+                                    num_coins[0] <= num_coins[0] + 1;
                                 end
                                 else begin
-                                    num_coins[2] <= num_coins[2] -1;
+                                    num_coins[2] <= num_coins[2] - 1;
                                     num_coins[1] <= num_coins[1] + 1;
                                     num_coins[0] <= num_coins[0] + 1;
                                 end
@@ -114,12 +116,12 @@ module vending_machine(
                             end
                         end
                         4'b0010 : begin
-                            if(num_coins[1]==0) begin
+                            if (num_coins[1] == 0) begin
                                 num_coins[2] <= num_coins[2] - 1;
                                 num_coins[1] <= num_coins[1] + 1;
                             end
                             else begin
-                                num_coins[1] <= num_coins[1]-1;
+                                num_coins[1] <= num_coins[1] - 1;
                             end
                         end
                         4'b0100 : begin
