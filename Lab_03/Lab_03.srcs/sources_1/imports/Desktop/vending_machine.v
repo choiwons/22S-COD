@@ -33,6 +33,7 @@ module vending_machine(
     // Net constant values (prefix kk & CamelCase)
     wire [31:0] kkItemPrice [`kNumItems - 1:0]; // Price of each item
     wire [31:0] kkCoinValue [`kNumCoins - 1:0]; // Value of each coin
+    wire [`kNumItems - 1:0] o_output_item;
     assign kkItemPrice[0] = 400;
     assign kkItemPrice[1] = 500;
     assign kkItemPrice[2] = 1000;
@@ -40,7 +41,7 @@ module vending_machine(
     assign kkCoinValue[0] = 100;
     assign kkCoinValue[1] = 500;
     assign kkCoinValue[2] = 1000;
-
+    assign output_item = o_output_item;
     // Internal states. You may add your own reg variables.
     reg [`kCoinBits - 1:0] num_coins [`kNumCoins - 1:0]; // use if needed
     // Combinational circuit for the next states
@@ -59,8 +60,7 @@ module vending_machine(
     // Sequential circuit to reset or update the states
     always @(posedge clk) begin
         if (!reset_n) begin
-            o_return_coin
-                <= 0;
+            o_return_coin <= 0;
             num_coins[0] <= 0;
             num_coins[1] <= 0;
             num_coins[2] <= 0;
@@ -98,7 +98,7 @@ module vending_machine(
 
                 end
                 else begin
-                    case (o_output_item) // output
+                    case (output_item) // output
                         4'b0001 : begin
                             if (num_coins[0] < 4) begin
                                 if (num_coins[1] == 1) begin
@@ -130,7 +130,8 @@ module vending_machine(
                         4'b1000 : begin
                             num_coins[2] <= num_coins[2] - 2;
                         end
-                    endcase
+                    end
+
                 end
             end
         end
