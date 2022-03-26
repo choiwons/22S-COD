@@ -42,28 +42,39 @@ module vending_machine(
     assign kkCoinValue[2] = 1000;
     // Internal states. You may add your own reg variables.
     reg [`kCoinBits - 1:0] num_coins [`kNumCoins - 1:0]; // use if needed
-    reg [`kTotalBits - 1:0] input_coin_value;
-    reg [`kTotalBits - 1:0] used_coin_value;
+    reg [`kCoinBits - 1:0] next_num_coins [`kNumCoins - 1:0]; // use if needed
     reg [`kTotalBits - 1:0] current_total;
     reg [`kNumItems - 1:0] output_item;
+    reg [`kNumItems - 1:0] available_item;
 
     // Combinational circuit for the next states
     always @(*) begin
+        next_num_coins[2] <= (i_input_coin==3'b100) ? num_coins[2] + 1 :
+                      (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[2] + 1 :
+                      (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[2] + 1 :
+                      (output_item==4'b1000) ? num_coins[2] -2 :
+                      (output_item==4'b0100) ? num_coins[2] -1 :
+                      (output_item==4'b0010&&num_coins[1]==0) ? num_coins[2]-1:
+                      (output_item==4'b0001&&num_coins[1]==0&&num_coins[0]!=4) ? num_coins[2]-1:num_coins[2];
+        next_num_coins[1] <= (i_input_coin==3'b010&&num_coins[1]==0) ? num_coins[1] + 1 :
+                      (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[1] - 1 :
+                      (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==0) ? num_coins[1] + 1 :
+                      (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[1] - 1 :
+                      (output_item==4'b0010&&num_coins[1]==1) ? num_coins[1]-1  :
+                      (output_item==4'b0010&&num_coins[1]==0) ? num_coins[1] + 1 :
+                      (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[1] -1 :
+                      (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[1] + 1 : num_coins[1];
+        next_num_coins[0] <= (i_input_coin==3'b001&&num_coins[0]!=4) ? num_coins[0]+1 :
+                      (i_input_coin==3'b001&&num_coins[0]==4) ? num_coins[0] - 4:
+                      (output_item==4'b0001&&num_coins[0]==4) ? num_coins[0]-4  :
+                      (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[0]+1  :
+                      (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[0]+1  : num_coins[0];
     end
     // Combinational circuit for the output
     always @(*) begin
-        current_total = num_coins[0] * kkCoinValue[0] + num_coins[1] * kkCoinValue[1] + num_coins[2] * kkCoinValue[2];
-        input_coin_value = (i_input_coin == 3'b100) ? kkCoinValue[2] :
-                         (i_input_coin == 3'b010) ? kkCoinValue[1] :
-                         (i_input_coin == 3'b001) ? kkCoinValue[0] :0;
-        used_coin_value = (i_select_item == 4'b1000 && current_total + input_coin_value > kkItemPrice[3]) ? kkItemPrice[3] :
-                        (i_select_item == 4'b0100 && current_total + input_coin_value > kkItemPrice[2]) ? kkItemPrice[2] :
-                        (i_select_item == 4'b0010 && current_total + input_coin_value > kkItemPrice[1]) ? kkItemPrice[1] :
-                        (i_select_item == 4'b0001 && current_total + input_coin_value > kkItemPrice[0]) ? kkItemPrice[0] : 0;
-        output_item <= (i_select_item==4'b1000&&num_coins[2]>=2)? 4'b1000 :
-                    (i_select_item==4'b0100&&num_coins[2]>=1)? 4'b0100 :
-                    (i_select_item==4'b0010&&(num_coins[2]>=1||num_coins[1]==1))? 4'b0010 :
-                    (i_select_item==4'b0001&&(num_coins[2]>=1||num_coins[1]==1||num_coins[0]==4))? 4'b0001 : 4'b0000;
+        available_item = o_available_item;
+        current_total = next_num_coins[0] * kkCoinValue[0] + next_num_coins[1] * kkCoinValue[1] + next_num_coins[2] * kkCoinValue[2];
+        output_item =i_select_item & available_item;
     end
 
     // Sequential circuit to reset or update the states
@@ -88,123 +99,16 @@ module vending_machine(
                 num_coins[2] <=0;
             end
             else begin
-                o_current_total <= current_total +input_coin_value-used_coin_value;
+                o_current_total <= current_total;
                 o_return_coin <= 0;
                 o_output_item <= output_item;
-                o_available_item[3] <= (current_total + input_coin_value - used_coin_value >= kkItemPrice[3]) ? 1 : 0;
-                o_available_item[2] <= (current_total + input_coin_value - used_coin_value >= kkItemPrice[2]) ? 1 : 0;
-                o_available_item[1] <= (current_total + input_coin_value - used_coin_value >= kkItemPrice[1]) ? 1 : 0;
-                o_available_item[0] <= (current_total + input_coin_value - used_coin_value >= kkItemPrice[0]) ? 1 : 0;
-                num_coins[2] <= (i_input_coin==3'b100) ? num_coins[2] + 1 :
-                         (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[2] + 1 :
-                         (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[2] + 1 :
-                         (output_item==4'b1000) ? num_coins[2] -2 :
-                         (output_item==4'b0100) ? num_coins[2] -1 :
-                         (output_item==4'b0010&&num_coins[1]==0) ? num_coins[2]-1:
-                         (output_item==4'b0001&&num_coins[1]==0&&num_coins[0]!=4) ? num_coins[2]-1:num_coins[2];
-                num_coins[1] <= (i_input_coin==3'b010&&num_coins[1]==0) ? num_coins[1] + 1 :
-                         (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[1] - 1 :
-                         (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==0) ? num_coins[1] + 1 :
-                         (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[1] - 1 :
-                         (output_item==4'b0010&&num_coins[1]==1) ? num_coins[1]-1  :
-                         (output_item==4'b0010&&num_coins[1]==0) ? num_coins[1] + 1 :
-                         (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[1] -1 :
-                         (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[1] + 1 : num_coins[1];
-                num_coins[0] <= (i_input_coin==3'b001&&num_coins[0]!=4) ? num_coins[0]+1 :
-                         (i_input_coin==3'b001&&num_coins[0]==4) ? num_coins[0] - 4:
-                         (output_item==4'b0001&&num_coins[0]==4) ? num_coins[0]-4  :
-                         (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[0]+1  :
-                         (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[0]+1  : num_coins[0];
-                // if (i_input_coin) begin
-                //     case (i_input_coin) // input
-                //         3'b001 : begin
-                //             if(num_coins[0]==4) begin
-                //                 if(num_coins[1]==0) begin
-                //                     num_coins[2] <= num_coins[2];
-                //                     num_coins[1] <= num_coins[1] + 1;
-                //                     num_coins[0] <= num_coins[0] - 4;
-                //                 end
-                //                 else begin
-                //                     num_coins[2] <= num_coins[2] + 1;
-                //                     num_coins[1] <= num_coins[1] - 1;
-                //                     num_coins[0] <= num_coins[0] - 4;
-                //                 end
-                //             end
-                //             else begin
-                //                 num_coins[2] <= num_coins[2];
-                //                 num_coins[1] <= num_coins[1];
-                //                 num_coins[0] <= num_coins[0] + 1;
-                //             end
-                //         end
-                //         3'b010 : begin
-                //             if(num_coins[1] == 1) begin
-                //                 num_coins[2] <= num_coins[2] + 1;
-                //                 num_coins[1] <= num_coins[1] - 1;
-                //                 num_coins[0] <= num_coins[0];
-                //             end
-                //             else begin
-                //                 num_coins[2] <= num_coins[2];
-                //                 num_coins[1] <= num_coins[1] + 1;
-                //                 num_coins[0] <= num_coins[0];
-                //             end
-                //         end
-                //         3'b100 : begin
-                //             num_coins[2] <= num_coins[2] + 1;
-                //             num_coins[1] <= num_coins[1];
-                //             num_coins[0] <= num_coins[0];
-                //         end
-                //         defalut : begin
-                //             num_coins[2] <= num_coins[2];
-                //             num_coins[1] <= num_coins[1];
-                //             num_coins[0] <= num_coins[0];
-                //         end
-                //     endcase
-                // end
-                // else begin
-                //     case (o_output_item) // output
-                //         4'b0001 : begin
-                //             if (num_coins[0] < 4) begin
-                //                 if (num_coins[1] == 1) begin
-                //                     num_coins[2] <= num_coins[2];
-                //                     num_coins[1] <= num_coins[1] - 1;
-                //                     num_coins[0] <= num_coins[0] + 1;
-                //                 end
-                //                 else begin
-                //                     num_coins[2] <= num_coins[2] - 1;
-                //                     num_coins[1] <= num_coins[1] + 1;
-                //                     num_coins[0] <= num_coins[0] + 1;
-                //                 end
-                //             end
-                //             else begin
-                //                 num_coins[2] <= num_coins[2];
-                //                 num_coins[1] <= num_coins[1];
-                //                 num_coins[0] <= num_coins[0] - 4;
-                //             end
-                //         end
-                //         4'b0010 : begin
-                //             if (num_coins[1] == 0) begin
-                //                 num_coins[2] <= num_coins[2] - 1;
-                //                 num_coins[1] <= num_coins[1] + 1;
-                //                 num_coins[0] <= num_coins[0];
-                //             end
-                //             else begin
-                //                 num_coins[2] <= num_coins[2];
-                //                 num_coins[1] <= num_coins[1] - 1;
-                //                 num_coins[0] <= num_coins[0];
-                //             end
-                //         end
-                //         4'b0100 : begin
-                //             num_coins[2] <= num_coins[2] - 1;
-                //             num_coins[1] <= num_coins[1];
-                //             num_coins[0] <= num_coins[0];
-                //         end
-                //         4'b1000 : begin
-                //             num_coins[2] <= num_coins[2] - 2;
-                //             num_coins[1] <= num_coins[1];
-                //             num_coins[0] <= num_coins[0];
-                //         end
-                //     endcase
-                // end
+                o_available_item[3] <= (current_total >= kkItemPrice[3]) ? 1 : 0;
+                o_available_item[2] <= (current_total >= kkItemPrice[2]) ? 1 : 0;
+                o_available_item[1] <= (current_total >= kkItemPrice[1]) ? 1 : 0;
+                o_available_item[0] <= (current_total >= kkItemPrice[0]) ? 1 : 0;
+                num_coins[0] <=next_num_coins[0];
+                num_coins[1] <=next_num_coins[1];
+                num_coins[2] <=next_num_coins[2];
             end
         end
     end
