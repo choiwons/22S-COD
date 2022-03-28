@@ -173,7 +173,6 @@ module vending_machine_tb;
                 Failed = Failed + 1;
                 $display("FAILED at %0d", $time, "ns");
                 $display("Correct ans=> o_available_item: 4'b%b, o_output_item: 4'b%b, o_current_total: %0d", available_item, output_item, current_total);
-                $display("Current ans=> o_available_item: 4'b%b, o_output_item: 4'b%b, o_current_total: %0d", o_available_item, o_output_item, o_current_total);
             end
         end
     endtask
@@ -189,8 +188,6 @@ module vending_machine_tb;
                 Failed = Failed + 1;
                 $display("FAILED at %0d", $time, "ns");
                 $display("Correct ans=> o_return_coin: %0d", return_coin);
-                $display("Current ans=> o_return_coin: %0d", o_return_coin);
-                $display("Current ans=> o_available_item: 4'b%b, o_output_item: 4'b%b, o_current_total: %0d", o_available_item, o_output_item, o_current_total);
             end
         end
     endtask

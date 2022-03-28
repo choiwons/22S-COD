@@ -45,18 +45,17 @@ module vending_machine(
     reg [`kCoinBits - 1:0] next_num_coins [`kNumCoins - 1:0]; // use if needed
     reg [`kTotalBits - 1:0] current_total;
     reg [`kNumItems - 1:0] output_item;
-    reg [`kNumItems - 1:0] available_item;
 
-    // Combinational circuit for the next states
     always @(*) begin
-        next_num_coins[2] <= (i_input_coin==3'b100) ? num_coins[2] + 1 :
+        output_item =i_select_item & o_available_item; //o_available_item은 update되기 전이기에 현재 물건을 구매했는지 나타내준다.
+        next_num_coins[2] = (i_input_coin==3'b100) ? num_coins[2] + 1 :
                       (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[2] + 1 :
                       (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[2] + 1 :
                       (output_item==4'b1000) ? num_coins[2] -2 :
                       (output_item==4'b0100) ? num_coins[2] -1 :
                       (output_item==4'b0010&&num_coins[1]==0) ? num_coins[2]-1:
                       (output_item==4'b0001&&num_coins[1]==0&&num_coins[0]!=4) ? num_coins[2]-1:num_coins[2];
-        next_num_coins[1] <= (i_input_coin==3'b010&&num_coins[1]==0) ? num_coins[1] + 1 :
+        next_num_coins[1] = (i_input_coin==3'b010&&num_coins[1]==0) ? num_coins[1] + 1 :
                       (i_input_coin==3'b010&&num_coins[1]==1) ? num_coins[1] - 1 :
                       (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==0) ? num_coins[1] + 1 :
                       (i_input_coin==3'b001&&num_coins[0]==4&&num_coins[1]==1) ? num_coins[1] - 1 :
@@ -64,17 +63,104 @@ module vending_machine(
                       (output_item==4'b0010&&num_coins[1]==0) ? num_coins[1] + 1 :
                       (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[1] -1 :
                       (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[1] + 1 : num_coins[1];
-        next_num_coins[0] <= (i_input_coin==3'b001&&num_coins[0]!=4) ? num_coins[0]+1 :
+        next_num_coins[0] = (i_input_coin==3'b001&&num_coins[0]!=4) ? num_coins[0]+1 :
                       (i_input_coin==3'b001&&num_coins[0]==4) ? num_coins[0] - 4:
                       (output_item==4'b0001&&num_coins[0]==4) ? num_coins[0]-4  :
                       (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==1) ? num_coins[0]+1  :
                       (output_item==4'b0001&&num_coins[0]<4&&num_coins[1]==0) ? num_coins[0]+1  : num_coins[0];
-    end
-    // Combinational circuit for the output
-    always @(*) begin
-        available_item = o_available_item;
+        //current_total은 물건을 구매하거나 동전을 넣는 input을 고려해준 전체 돈입니다.
         current_total = next_num_coins[0] * kkCoinValue[0] + next_num_coins[1] * kkCoinValue[1] + next_num_coins[2] * kkCoinValue[2];
-        output_item =i_select_item & available_item;
+        //앞서 선언한 next_num_coins와 동일한 내용입니다. 가독성을 위해 첨부합니다.
+        // if (i_input_coin) begin
+        //     case (i_input_coin) // input
+        //         3'b001 : begin
+        //             if(num_coins[0]==4) begin
+        //                 if(num_coins[1]==0) begin
+        //                     next_num_coins[2] <= num_coins[2];
+        //                     next_num_coins[1] <= num_coins[1] + 1;
+        //                     next_num_coins[0] <= num_coins[0] - 4;
+        //                 end
+        //                 else begin
+        //                     next_num_coins[2] <= num_coins[2] + 1;
+        //                     next_num_coins[1] <= num_coins[1] - 1;
+        //                     next_num_coins[0] <= num_coins[0] - 4;
+        //                 end
+        //             end
+        //             else begin
+        //                 next_num_coins[2] <= num_coins[2];
+        //                 next_num_coins[1] <= num_coins[1];
+        //                 next_num_coins[0] <= num_coins[0] + 1;
+        //             end
+        //         end
+        //         3'b010 : begin
+        //             if(num_coins[1] == 1) begin
+        //                 next_num_coins[2] <= num_coins[2] + 1;
+        //                 next_num_coins[1] <= num_coins[1] - 1;
+        //                 next_num_coins[0] <= num_coins[0];
+        //             end
+        //             else begin
+        //                 next_num_coins[2] <= num_coins[2];
+        //                 next_num_coins[1] <= num_coins[1] + 1;
+        //                 next_num_coins[0] <= num_coins[0];
+        //             end
+        //         end
+        //         3'b100 : begin
+        //             next_num_coins[2] <= num_coins[2] + 1;
+        //             next_num_coins[1] <= num_coins[1];
+        //             next_num_coins[0] <= num_coins[0];
+        //         end
+        //         defalut : begin
+        //             next_num_coins[2] <= num_coins[2];
+        //             next_num_coins[1] <= num_coins[1];
+        //             next_num_coins[0] <= num_coins[0];
+        //         end
+        //     endcase
+        // end
+        // else begin
+        //     case (output_item) // output
+        //         4'b0001 : begin
+        //             if (num_coins[0] < 4) begin
+        //                 if (num_coins[1] == 1) begin
+        //                     next_num_coins[2] <= num_coins[2];
+        //                     next_num_coins[1] <= num_coins[1] - 1;
+        //                     next_num_coins[0] <= num_coins[0] + 1;
+        //                 end
+        //                 else begin
+        //                     next_num_coins[2] <= num_coins[2] - 1;
+        //                     next_num_coins[1] <= num_coins[1] + 1;
+        //                     next_num_coins[0] <= num_coins[0] + 1;
+        //                 end
+        //             end
+        //             else begin
+        //                 next_num_coins[2] <= num_coins[2];
+        //                 next_num_coins[1] <= num_coins[1];
+        //                 next_num_coins[0] <= num_coins[0] - 4;
+        //             end
+        //         end
+        //         4'b0010 : begin
+        //             if (num_coins[1] == 0) begin
+        //                 next_num_coins[2] <= num_coins[2] - 1;
+        //                 next_num_coins[1] <= num_coins[1] + 1;
+        //                 next_num_coins[0] <= num_coins[0];
+        //             end
+        //             else begin
+        //                 next_num_coins[2] <= num_coins[2];
+        //                 next_num_coins[1] <= num_coins[1] - 1;
+        //                 next_num_coins[0] <= num_coins[0];
+        //             end
+        //         end
+        //         4'b0100 : begin
+        //             next_num_coins[2] <= num_coins[2] - 1;
+        //             next_num_coins[1] <= num_coins[1];
+        //             next_num_coins[0] <= num_coins[0];
+        //         end
+        //         4'b1000 : begin
+        //             next_num_coins[2] <= num_coins[2] - 2;
+        //             next_num_coins[1] <= num_coins[1];
+        //             next_num_coins[0] <= num_coins[0];
+        //         end
+        //     endcase
+        // end
     end
 
     // Sequential circuit to reset or update the states
@@ -99,8 +185,8 @@ module vending_machine(
                 num_coins[2] <=0;
             end
             else begin
-                o_current_total <= current_total;
                 o_return_coin <= 0;
+                o_current_total <= current_total;
                 o_output_item <= output_item;
                 o_available_item[3] <= (current_total >= kkItemPrice[3]) ? 1 : 0;
                 o_available_item[2] <= (current_total >= kkItemPrice[2]) ? 1 : 0;
