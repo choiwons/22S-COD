@@ -20,13 +20,13 @@
 `define OPCODE_JAL 4'd10
 `define OPCODE_ADD 4'd15
 
-`define RegDst control_bit[0]
-`define Jump control_bit[1]
-`define Branch control_bit[2]
-`define MemRead  control_bit[3]
-`define MemtoReg control_bit[4]
-`define ALUOp  control_bit[8:5]
-`define MemWrite control_bit[9]
-`define ALUSrc control_bit[10]
-`define RegWrite control_bit[11]
-`define isWWD control_bit[12]
+`define RegDst control_bit[0];
+`define Jump control_bit[1];
+`define Branch control_bit[2];
+`define MemRead  control_bit[3];
+`define MemtoReg control_bit[4];
+`define ALUOp  control_bit[8:5];
+`define MemWrite control_bit[9];
+`define ALUSrc control_bit[10];
+`define RegWrite control_bit[11];
+`define isWWD control_bit[12];

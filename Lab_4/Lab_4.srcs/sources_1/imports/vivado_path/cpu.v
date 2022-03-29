@@ -23,40 +23,43 @@ module cpu (
         output reg [`WORD_SIZE-1:0] num_inst,   // number of instruction during execution
         output [`WORD_SIZE-1:0] output_port // this will be used for a "WWD" instruction
     );
+
     wire [12:0] control_bit;
-    wire isReadyforControl;
+    wire controlReady;
     wire isComplete;
+    reg initComeplete;
+
     control_path cp(
-                     .instruction(data),
+                     .inst(data),
                      .inputReady(inputReady),
-                     .isReady(isReadyforControl),
-                     .control_bit(control_bit)
-                 );
+                     .isReady(controlReady),
+                     .control_bit(control_bit));
     data_path dp(
                   .instruction(data),
                   .control_bit(control_bit),
-                  .clk(clk),
                   .reset_n(reset_n),
                   .output_port(output_port),
                   .PC(address),
-                  .isReady(isReadyforControl),
-                  .isComplete(isComplete)
-              );
+                  .isReady(controlReady),
+                  .initComplete(initComplete),
+                  .isComplete(isComplete));
 
-    // ... fill in the rest of the code
-    always @(posedge clk or posedge isComplete or negedge reset_n) begin
+    always @(posedge clk or posedge isComplete or posedge inputReady) begin
         if(!reset_n) begin
             num_inst <=0;
             readM <=0;
+            initComeplete <=0;
         end
         else begin
-            if(isComplete) begin
-                num_inst <= num_inst +1;
+            if(inputReady&isComplete) begin
+                num_inst <= num_inst+1;
                 readM <= 0;
+                initComeplete <= 1;
             end
             else begin
                 num_inst <= num_inst;
                 readM <= 1;
+                initComeplete <= 0;
             end
         end
     end
