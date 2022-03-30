@@ -9,75 +9,60 @@
 `define ALUSrc control_bit[10]
 `define RegWrite control_bit[11]
 `define isWWD control_bit[12]
-module data_path(instruction,control_bit,reset_n,isReady, PC, output_port, isComplete,initComplete);
+module data_path(instruction,control_bit,reset_n,inputReady, num_inst, PC, output_port);
     input [`WORD_SIZE-1:0] instruction;
     input [12:0] control_bit;
     input reset_n;
-    input isReady;
-    input initComplete;
+    input inputReady;
+    output reg [15:0] num_inst;
     output reg [15:0] PC;
     output reg [15:0] output_port;
-    output reg isComplete;
-
+    //MUX
     wire [`WORD_SIZE-1:0] MUXbeforeALU;
     wire [1:0] MUXbeforeRF;
     wire [`WORD_SIZE-1:0] writeData;
-
+    //Wire
     wire [`WORD_SIZE-1:0] regData1;
     wire [`WORD_SIZE-1:0] regData2;
     wire [`WORD_SIZE-1:0] resultOfALU;
     wire isOverFlow;
-    wire ALUReady;
-    wire readyToRead;
+
+    //MUX connection
     assign    MUXbeforeALU = (control_bit[10:9]==2'b00) ? {{8{instruction[7]}},instruction[7:0]} :
               (control_bit[10:9]==2'b01) ? instruction[7:0]<<8  :
               (control_bit[10:9]==2'b10) ? regData2 : regData2;
     assign    MUXbeforeRF = (control_bit[0]) ? instruction[9:8] : instruction[7:6] ;
-
+    //RF, ALU instanciation
     RF rf(
            .RegWrite(control_bit[11]),
-           .clk(clk),
+           .inputReady(inputReady),
            .reset_n(reset_n),
            .addr1(instruction[11:10]), //rs
            .addr2(instruction[9:8]),   //rt
            .addr3(MUXbeforeRF),   //write address
-           .readyToRead(readyToRead),
            .data1(regData1),
            .data2(regData2),
-           .data3(writeData),
-           .isReady(isReady),
-           .ALUReady(ALUReady)
+           .data3(writeData)
        );
     ALU alu(
             .A(regData1),
             .B(MUXbeforeALU),
             .Cin(1'b0),
-            .isReady(readyToRead),
             .OP(`ALUOp),
             .C(writeData),
-            .Cout(isOverFlow),
-            .writeReady(ALUReady)
+            .Cout(isOverFlow)
         );
-    always @(posedge initComplete) begin
-        isComplete <= 0;
-    end
-
-    always @(negedge reset_n  or posedge ALUReady) begin
+    ///////////////////////////
+    always @(negedge reset_n  or negedge inputReady) begin
         if(!reset_n) begin
             output_port <= 0;
             PC <= 0;
-            isComplete <= 0;
-        end
-        else if(`isWWD) begin
-            PC <= (control_bit[1]) ? {PC[15:12], instruction[11:0]}: PC+1;
-            output_port <= regData1;
-            isComplete <= 1;
+            num_inst <= 0;
         end
         else begin
             PC <= (control_bit[1]) ? {PC[15:12], instruction[11:0]}: PC+1;
             output_port <= regData1;
-            isComplete <=1;
+            num_inst <= num_inst + 1;
         end
     end
-
 endmodule

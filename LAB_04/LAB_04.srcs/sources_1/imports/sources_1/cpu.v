@@ -20,46 +20,38 @@ module cpu (
         input clk,                          // clock signal
 
         // for debuging/testing purpose
-        output reg [`WORD_SIZE-1:0] num_inst,   // number of instruction during execution
+        output [`WORD_SIZE-1:0] num_inst,   // number of instruction during execution
         output [`WORD_SIZE-1:0] output_port // this will be used for a "WWD" instruction
     );
 
     wire [12:0] control_bit;
-    wire controlReady;
-    wire isComplete;
-    reg initComeplete;
+    reg [15:0] instruction;
 
     control_path cp(
-                     .inst(data),
-                     .inputReady(inputReady),
-                     .isReady(controlReady),
+                     .inst(instruction),
                      .control_bit(control_bit));
     data_path dp(
-                  .instruction(data),
+                  .instruction(instruction),
+                  .inputReady(inputReady),
                   .control_bit(control_bit),
                   .reset_n(reset_n),
                   .output_port(output_port),
-                  .PC(address),
-                  .isReady(controlReady),
-                  .initComplete(initComplete),
-                  .isComplete(isComplete));
+                  .num_inst(num_inst),
+                  .PC(address));
 
-    always @(posedge clk or posedge isComplete or posedge inputReady) begin
+    always @(negedge reset_n or posedge clk or posedge inputReady) begin
         if(!reset_n) begin
-            num_inst <=0;
             readM <=0;
-            initComeplete <=0;
+            instruction <=instruction;
         end
         else begin
-            if(inputReady&isComplete) begin
-                num_inst <= num_inst+1;
+            if(inputReady) begin
                 readM <= 0;
-                initComeplete <= 1;
+                instruction <= data;
             end
             else begin
-                num_inst <= num_inst;
                 readM <= 1;
-                initComeplete <= 0;
+                instruction <= instruction;
             end
         end
     end
