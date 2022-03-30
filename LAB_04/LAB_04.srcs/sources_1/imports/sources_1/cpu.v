@@ -12,7 +12,7 @@
 
 // MODULE DECLARATION
 module cpu (
-        output reg readM,                       // read from memory
+        output readM,                       // read from memory
         output [`WORD_SIZE-1:0] address,    // current address for data
         inout [`WORD_SIZE-1:0] data,        // data being input or output
         input inputReady,                   // indicates that data is ready from the input port
@@ -33,26 +33,21 @@ module cpu (
     data_path dp(
                   .instruction(instruction),
                   .inputReady(inputReady),
+                  .clk(clk),
                   .control_bit(control_bit),
                   .reset_n(reset_n),
                   .output_port(output_port),
+                  .readM(readM),
                   .num_inst(num_inst),
                   .PC(address));
 
-    always @(negedge reset_n or posedge clk or posedge inputReady) begin
+
+    always @(negedge reset_n or posedge inputReady) begin
         if(!reset_n) begin
-            readM <=0;
-            instruction <=instruction;
+            instruction <=0;
         end
         else begin
-            if(inputReady) begin
-                readM <= 0;
-                instruction <= data;
-            end
-            else begin
-                readM <= 1;
-                instruction <= instruction;
-            end
+            instruction <= data;
         end
     end
 endmodule

@@ -1,8 +1,8 @@
 
-module RF(RegWrite, reset_n,inputReady, addr1, addr2, addr3, data1, data2, data3);
+module RF(RegWrite, reset_n, clk, addr1, addr2, addr3, data1, data2, data3);
     input RegWrite;
     input reset_n;
-    input inputReady;
+    input clk;
     input [1:0] addr1;
     input [1:0] addr2;
     input [1:0] addr3;
@@ -17,7 +17,7 @@ module RF(RegWrite, reset_n,inputReady, addr1, addr2, addr3, data1, data2, data3
         data2 = register[addr2];
     end
 
-    always @(posedge inputReady or negedge reset_n) begin
+    always @(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
             register [0] <= 16'b0;
             register [1] <= 16'b0;
