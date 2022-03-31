@@ -9,13 +9,11 @@
 `define ALUSrc control_bit[10]
 `define RegWrite control_bit[11]
 `define isWWD control_bit[12]
-module data_path(instruction,clk,readM, control_bit,reset_n,inputReady, num_inst, PC, output_port);
+module data_path(instruction,clk, control_bit,reset_n, num_inst, PC, output_port);
     input [`WORD_SIZE-1:0] instruction;
     input [12:0] control_bit;
     input clk;
     input reset_n;
-    input inputReady;
-    output reg readM;
     output reg [15:0] num_inst;
     output reg [15:0] PC;
     output reg [15:0] output_port;
@@ -54,23 +52,17 @@ module data_path(instruction,clk,readM, control_bit,reset_n,inputReady, num_inst
             .C(writeData),
             .Cout(isOverFlow)
         );
-    //////////////////////
-    always @(*) begin
-        readM = (inputReady) ? 0 :readM;
-    end
     ///////////////////////////
     always @(negedge reset_n  or posedge clk) begin
         if(!reset_n) begin
             output_port <= 0;
             PC <= 0;
             num_inst <= 0;
-            readM<=0;
         end
         else begin
             PC <= (control_bit[1]) ? {PC[15:12], instruction[11:0]}: PC+1;
             output_port <= regData1;
             num_inst <= num_inst + 1;
-            readM <=1;
         end
     end
 endmodule
