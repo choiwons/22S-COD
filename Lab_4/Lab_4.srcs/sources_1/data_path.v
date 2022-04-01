@@ -1,17 +1,7 @@
-`define WORD_SIZE 16
-`define RegDst control_bit[0]
-`define Jump control_bit[1]
-`define Branch control_bit[2]
-`define MemRead control_bit[3]
-`define MemtoReg control_bit[4]
-`define ALUOp control_bit[8:5]
-`define MemWrite control_bit[9]
-`define ALUSrc control_bit[10]
-`define RegWrite control_bit[11]
-`define isWWD control_bit[12]
+`include "opcodes.v"
 module data_path(instruction,clk, control_bit,reset_n, num_inst, PC, output_port);
     input [`WORD_SIZE-1:0] instruction;
-    input [12:0] control_bit;
+    input [13:0] control_bit;
     input clk;
     input reset_n;
     output reg [15:0] num_inst;
@@ -59,10 +49,15 @@ module data_path(instruction,clk, control_bit,reset_n, num_inst, PC, output_port
             PC <= 0;
             num_inst <= 0;
         end
-        else begin
+        else if(`PCwrite)begin
             PC <= (control_bit[1]) ? {PC[15:12], instruction[11:0]}: PC+1;
             output_port <= regData1;
             num_inst <= num_inst + 1;
+        end
+        else begin
+            PC <= PC;
+            output_port <= output_port;
+            num_inst <=num_inst;
         end
     end
 endmodule

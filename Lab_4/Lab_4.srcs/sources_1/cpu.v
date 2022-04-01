@@ -24,7 +24,7 @@ module cpu (
         output [`WORD_SIZE-1:0] output_port // this will be used for a "WWD" instruction
     );
 
-    wire [12:0] control_bit;
+    wire [13:0] control_bit;
     reg [15:0] instruction;
 
     control_path cp(
@@ -40,7 +40,7 @@ module cpu (
                   .PC(address));
 
 
-    always @(negedge reset_n or clk or posedge inputReady) begin
+    always @(negedge reset_n or posedge clk or posedge inputReady) begin
         if(!reset_n) begin
             readM <= 0;
             instruction <=0;
