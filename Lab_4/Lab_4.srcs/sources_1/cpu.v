@@ -24,33 +24,52 @@ module cpu (
         output [`WORD_SIZE-1:0] output_port // this will be used for a "WWD" instruction
     );
 
-    wire [13:0] control_bit;
-    reg [15:0] instruction;
 
+    wire [15:0] instruction;
+    wire RegDst;
+    wire Jump;
+    wire [3:0] ALUOp;
+    wire [1:0] ALUSrc;
+    wire RegWrite;
+    wire isWWD;
+    wire PCwrite;
+    //////////////////////////////////////////////////////
     control_path cp(
-                     .inst(instruction),
-                     .control_bit(control_bit));
+                     .opcode(instruction[15:12]),
+                     .funct(instruction[5:0]),
+                     .RegDst(RegDst),
+                     .Jump(Jump),
+                     .ALUOp(ALUOp),
+                     .ALUSrc(ALUSrc),
+                     .RegWrite(RegWrite),
+                     .isWWD(isWWD),
+                     .PCwrite(PCwrite));
     data_path dp(
                   .instruction(instruction),
+                  .data(data),
+                  .inputReady(inputReady),
+                  .RegDst(RegDst),
+                  .Jump(Jump),
+                  .ALUOp(ALUOp),
+                  .ALUSrc(ALUSrc),
+                  .RegWrite(RegWrite),
+                  .isWWD(isWWD),
+                  .PCwrite(PCwrite),
                   .clk(clk),
-                  .control_bit(control_bit),
                   .reset_n(reset_n),
                   .output_port(output_port),
                   .num_inst(num_inst),
                   .PC(address));
 
-
-    always @(negedge reset_n or posedge clk or posedge inputReady) begin
+    ///////////////////////////////////////////////////////
+    always @(negedge reset_n or posedge clk or posedge inputReady) begin //every
         if(!reset_n) begin
             readM <= 0;
-            instruction <=0;
         end
         else if(inputReady) begin
-            instruction <= data;
             readM <= 0;
         end
         else begin
-            instruction <= instruction;
             readM <= 1;
         end
     end
