@@ -1,21 +1,21 @@
-`define OP_ADD 4'b0000
-`define OP_SUB 4'b0001
+`define OP_ADD 3'b0000
+`define OP_SUB 3'b0001
 //  Bitwise Boolean operation
-`define OP_ID 4'b0010
-`define OP_NAND 4'b0011
-`define OP_NOR 4'b0100
-`define OP_XNOR 4'b0101
-`define OP_NOT 4'b0110
-`define OP_AND 4'b0111
-`define OP_OR 4'b1000
-`define OP_XOR 4'b1001
+`define OP_ID 3'b0010
+`define OP_NAND 3'b0011
+`define OP_NOR 3'b0100
+`define OP_XNOR 3'b0101
+`define OP_NOT 3'b0110
+`define OP_AND 3'b0111
+`define OP_OR 3'b1000
+`define OP_XOR 3'b1001
 // Shifting
-`define OP_LRS 4'b1010
-`define OP_ARS 4'b1011
-`define OP_RR 4'b1100
-`define OP_LLS 4'b1101
-`define OP_ALS 4'b1110
-`define OP_RL 4'b1111
+`define OP_LRS 3'b1010
+`define OP_ARS 3'b1011
+`define OP_RR 3'b1100
+`define OP_LLS 3'b1101
+`define OP_ALS 3'b1110
+`define OP_RL 3'b1111
 module ALU(
         input [15:0] A,
         input [15:0] B,
@@ -33,7 +33,7 @@ module ALU(
                 {Cout,C}=A-B-Cin;
             end
             `OP_ID: begin
-                C=B;
+                C=B; //change from Lab1, it's C=A before
                 Cout=0;
             end
             `OP_NAND:begin

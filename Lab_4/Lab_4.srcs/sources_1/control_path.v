@@ -27,7 +27,7 @@ module control_path(opcode,funct, RegDst,Jump,ALUOp,ALUSrc,RegWrite,isWWD,PCwrit
                 control_bit = {1'b0,1'b0,`OP_ID,2'd0,1'b0,1'b0,1'b0};
         endcase
     end
-    always @(*) begin
+    always @(*) begin //if instruction is Rtype(WWD,ADD for this lab), RtypeControl will be the control_bit.
         case(funct)
             `FUNC_WWD:
                 RtypeControl = {1'b0,1'b0,`OP_ID,2'd2,1'b0,1'b1,1'b1};

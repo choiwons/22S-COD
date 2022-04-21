@@ -62,7 +62,8 @@ module cpu (
                   .PC(address));
 
     ///////////////////////////////////////////////////////
-    always @(negedge reset_n or posedge clk or posedge inputReady) begin //every
+    //every posedge clk request input, and if inputReady signal is high, reset request signal(readM) to low
+    always @(negedge reset_n or posedge clk or posedge inputReady) begin
         if(!reset_n) begin
             readM <= 0;
         end

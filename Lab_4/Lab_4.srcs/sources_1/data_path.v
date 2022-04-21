@@ -39,7 +39,7 @@ module data_path(data,inputReady,instruction,clk,reset_n, RegDst,Jump,ALUOp,ALUS
     assign rs = instruction[11:10];
     assign rt = instruction[9:8];
     assign rd = instruction[7:6];
-    assign    MUXbeforeRF = (RegDst) ? rt : rd ;
+    assign MUXbeforeRF = (RegDst) ? rt : rd ; //mux for RF write register
     RF rf(
            .RegWrite(RegWrite),
            .reset_n(reset_n),
@@ -55,7 +55,7 @@ module data_path(data,inputReady,instruction,clk,reset_n, RegDst,Jump,ALUOp,ALUS
     //About ALU
     wire [`WORD_SIZE-1:0] MUXbeforeALU;
     wire isOverFlow;
-    assign    MUXbeforeALU = (ALUSrc==2'b00) ? {{8{imm[7]}},imm} :
+    assign    MUXbeforeALU = (ALUSrc==2'b00) ? {{8{imm[7]}},imm} :  // mux for ALU second input
               (ALUSrc==2'b01) ? imm<<8  :
               (ALUSrc==2'b10) ? regData2 : regData2;
     ALU alu(
@@ -70,7 +70,7 @@ module data_path(data,inputReady,instruction,clk,reset_n, RegDst,Jump,ALUOp,ALUS
     //About PC
     wire [11:0] targetAddress;
     assign targetAddress = instruction[11:0];
-    always @(negedge reset_n  or posedge clk) begin
+    always @(negedge reset_n  or posedge clk) begin //every posedge clk, if PCwrite is on, update PC.
         if(!reset_n) begin
             PC <= 0;
         end
@@ -80,6 +80,8 @@ module data_path(data,inputReady,instruction,clk,reset_n, RegDst,Jump,ALUOp,ALUS
     end
     /////////////////////////////////////////
     //About output
+    //num_inst : if PCwrite is high, this means it's right instruction. Then, +1 to num_inst
+    //output_port : if isWWD is high, this means it's WWD instruction. Then, operate output_port <- $rt
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n) begin
             output_port <=0;
