@@ -5,21 +5,21 @@ module control_path(reset_n,clk,opcode,funct, RegDst,RegWrite,ALUSrcA,ALUSrcB,PC
     input reset_n;
     input clk;
     output [1:0]RegDst; // MuxBeforeRF-0: rt | 1: rd
-    output RegWrite;
-    output ALUSrcA;
-    output [2:0] ALUSrcB;
-    output [1:0] PCSource;
-    output IRWrite;
-    output [1:0] MemtoReg;
-    output MemWrite;
-    output MemRead;
-    output IorD;
-    output [3:0] ALUOp; // opcode for ALU
+    output RegWrite; //RF enable
+    output ALUSrcA; //first input to ALU | 0:PC | 1:buffer_A
+    output [2:0] ALUSrcB; //0:buffer_B | 1:1 | 2:imm<<8 | 3:signExtendedImm | 4:ZeroExtendedImm
+    output [1:0] PCSource; //mux for choose input to PC| 0:ALUresult |1:ALUout
+    output IRWrite; //control for IR to latch data
+    output [1:0] MemtoReg; //mux control bit to RF write data
+    output MemWrite; //write enable bit
+    output MemRead; //read enable bit
+    output IorD; //choose between PC and ALUOut
+    output [3:0] ALUOp; //opcode for ALU
     output isWWD; //to know current inst is WWD
-    output isHalt;
-    output isComplete;
+    output isHalt; // for HLT
+    output isComplete;//for update num_inst
     output PCwrite; //for pc write control
-    output PCwriteCond;
+    output PCwriteCond;//for branch inst
     /////////////////////////////////////////////////////////////////////////////
     //About state_machine
     wire [2:0] stage;

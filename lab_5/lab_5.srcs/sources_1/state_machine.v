@@ -12,7 +12,7 @@ module state_machine(opcode,funct,reset_n,clk,stage);
         end
         else begin
             case (stage)
-                `ERstage :
+                `ERstage : //initial condition of CPU
                     stage <= `IFstage;
                 `IFstage :
                     stage <= `IDstage;

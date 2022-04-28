@@ -17,7 +17,7 @@ module data_path(clk,reset_n,RegDst,RegWrite,ALUSrcA,ALUSrcB,PCSource,IRWrite,Me
     input isComplete;
     input PCwrite;
     input PCwriteCond;
-    inout [15:0] data;
+    inout [16:0] data;
     input inputReady;
     //<<refer to control path
     output [`WORD_SIZE-1:0] instruction;
@@ -71,7 +71,8 @@ module data_path(clk,reset_n,RegDst,RegWrite,ALUSrcA,ALUSrcB,PCSource,IRWrite,Me
     assign rt = instruction[9:8];
     assign rd = instruction[7:6];
     assign RegDst_Mux = (RegDst==2'd0) ? rt :
-           (RegDst == 2'd1)? rd : 2 ; //mux for RF write register
+           (RegDst == 2'd1)? rd : 2 ;
+    //mux for RF write register
     assign MemtoReg_Mux = (MemtoReg==2'd0) ? resultOfALU :
            (MemtoReg==2'd1) ? MDR :
            (MemtoReg==2'd2) ? ALUOut :

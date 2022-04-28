@@ -74,7 +74,6 @@ module cpu (
                   .IRWrite(IRWrite),
                   .MemtoReg(MemtoReg),
                   .MemWrite(writeM),
-                  .MemRead(MemRead),
                   .IorD(IorD),
                   .ALUOp(ALUOp),
                   .isWWD(isWWD),

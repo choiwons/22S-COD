@@ -5,11 +5,11 @@ module ROM(opcode,funct,stage,RegDst,RegWrite,ALUSrcA,ALUSrcB,PCSource,IRWrite,M
     input [2:0] stage;  //result of state_machine
     output [1:0]RegDst; // MuxBeforeRF-0: rt | 1: rd | 2: 2
     output RegWrite; //RF enable
-    output ALUSrcA; //first input to ALU | 0:PC | 1:A
-    output [2:0] ALUSrcB; //0:buffer_B | 1:1 | 2:imm<<8 | 3:signExtendedImm
+    output ALUSrcA; //first input to ALU | 0:PC | 1:buffer_A
+    output [2:0] ALUSrcB; //0:buffer_B | 1:1 | 2:imm<<8 | 3:signExtendedImm | 4:ZeroExtendedImm
     output [1:0] PCSource;//0:ALUresult | 1:ALUout | 2:targetAddress | 3:$rs
     output IRWrite;//IR latching enable signal
-    output [1:0] MemtoReg; //mux control bit to RF write data
+    output [1:0] MemtoReg; //mux control bit to RF write data | 0:resultOfALU | 1:MDR | 2:ALUOut | 3:PC
     output MemWrite; //write enable bit
     output MemRead; //read enable bit
     output IorD; // 0 : for Inst | 1 : for data
