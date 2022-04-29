@@ -11,12 +11,12 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="29049166fs"></ZoomStartTime>
-      <ZoomEndTime time="29650167fs"></ZoomEndTime>
-      <Cursor1Time time="29350000fs"></Cursor1Time>
+      <ZoomStartTime time="53975000fs"></ZoomStartTime>
+      <ZoomEndTime time="60545001fs"></ZoomEndTime>
+      <Cursor1Time time="59450000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="155"></NameColumnWidth>
+      <NameColumnWidth column_width="150"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="110" />
@@ -281,6 +281,10 @@
       <obj_property name="ElementShortName">ALUOp[3:0]</obj_property>
       <obj_property name="ObjectShortName">ALUOp[3:0]</obj_property>
    </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/num_inst" type="array">
+      <obj_property name="ElementShortName">num_inst[15:0]</obj_property>
+      <obj_property name="ObjectShortName">num_inst[15:0]</obj_property>
+   </wvobject>
    <wvobject fp_name="/cpu_TB/NUUT/memory[3]" type="array">
       <obj_property name="ElementShortName">[3][15:0]</obj_property>
       <obj_property name="ObjectShortName">[3][15:0]</obj_property>
@@ -408,10 +412,6 @@
    <wvobject fp_name="/cpu_TB/UUT/dp/is_halted" type="logic">
       <obj_property name="ElementShortName">is_halted</obj_property>
       <obj_property name="ObjectShortName">is_halted</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/num_inst" type="array">
-      <obj_property name="ElementShortName">num_inst[15:0]</obj_property>
-      <obj_property name="ObjectShortName">num_inst[15:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/output_port" type="array">
       <obj_property name="ElementShortName">output_port[15:0]</obj_property>

@@ -44,18 +44,22 @@ module data_path(
     wire [`WORD_SIZE-1 :0] PCSrc_MUX;
     wire [`WORD_SIZE-1 :0] tarr;
     wire [`WORD_SIZE-1 :0] PCPlusOne;
+    wire [`WORD_SIZE-1 :0] NextPC;
     assign PCPlusOne = PC + 1;
-    assign tarr = (Jump_EX) ? targetAddress : PCPlusOne;
+    assign tarr = (Jump_EX) ? targetAddress : pc_buffer_ID_EX;
     assign PCSrc_MUX = (PCSrc_EX) ? buffer_A : tarr;
+    assign NextPC = (Branch_EX&&BranchCond) ? pc_buffer_ID_EX +SignExtendedImm : PCSrc_MUX;
     always @(negedge reset_n  or posedge clk) begin //every posedge clk, if PCwrite is on, update PC.
         if(!reset_n) begin
             PC <= 0;
         end
         else if(!stall_enable) begin
-            if(Branch_EX&&BranchCond)
-                PC <= pc_buffer_ID_EX + SignExtendedImm;
-            else
-                PC <= PCSrc_MUX;
+            if(flush) begin
+                PC <= NextPC;
+            end
+            else begin
+                PC <= predicted_address;
+            end
         end
     end
     /////////////////////////////////////////
@@ -65,15 +69,18 @@ module data_path(
     /////////////////////////////////////////
     //>>> IF/ID buffer
     reg [`WORD_SIZE-1:0] pc_buffer_IF_ID;
+    reg [`WORD_SIZE-1:0] predicted_address_ID;
     reg [`WORD_SIZE-1:0] IR;
     always@(negedge reset_n or posedge clk) begin
-        if(!reset_n || Jump_EX || (Branch_EX&&BranchCond)) begin
+        if(!reset_n || flush) begin
             IR <=`INST_BUB;
             pc_buffer_IF_ID <= 0;
+            predicted_address_ID <=0;
         end
         else if(!stall_enable) begin
             IR<= i_data;
             pc_buffer_IF_ID <= PCPlusOne;
+            predicted_address_ID <= predicted_address;
         end
     end
     /////////////////////////////////////////
@@ -110,6 +117,7 @@ module data_path(
     // >>>> ID/EX buffer
     ////control
     reg [`WORD_SIZE-1:0] pc_buffer_ID_EX;
+    reg [`WORD_SIZE-1:0] predicted_address_EX;
     reg [`WORD_SIZE-1:0] SignExtendedImm;
     reg [`WORD_SIZE-1:0] ZeroExtendedImm;
     reg [`WORD_SIZE-1:0] ShiftedImm;
@@ -130,9 +138,10 @@ module data_path(
     reg [1:0] buffer_dest_reg_EX;
     reg [11:0] target;
     always @(negedge reset_n or posedge clk) begin
-        if(!reset_n ||stall_enable|| Jump_EX ||(Branch_EX && BranchCond)) begin
+        if(!reset_n ||stall_enable|| flush) begin
             SignExtendedImm <= 0;
             ZeroExtendedImm <= 0;
+            predicted_address_EX <=0;
             ShiftedImm <= 0;
             buffer_A <= 0;
             buffer_B <= 0;
@@ -155,6 +164,7 @@ module data_path(
         else begin
             SignExtendedImm <= {{8{imm[7]}},imm};
             ZeroExtendedImm <= {{8{1'b0}},imm};
+            predicted_address_EX <=predicted_address_ID;
             ShiftedImm <= imm<<8;
             buffer_A <= RF_out_A;
             buffer_B <= RF_out_B;
@@ -318,8 +328,29 @@ module data_path(
                     .RegWrite_EX(RegWrite_EX),
                     .RegWrite_MEM(RegWrite_MEM),
                     .RegWrite_WB(RegWrite_WB),
-                    .Jump(Jump_EX),
+                    .flush(flush),
                     .isJAL(isJAL),
                     .stall_enable(stall_enable)
                 );
+    /////////////////////////////////////////////////
+    //prediction
+    wire flush;
+    wire [`WORD_SIZE-1:0] predicted_address;
+    wire [`WORD_SIZE-1:0] write_btb;
+    assign write_btb = (Branch_EX)? pc_buffer_ID_EX +SignExtendedImm :
+           (Jump_EX) ? PCSrc_MUX : 0;
+    btb btb(
+            .pc(PC[7:0]),
+            .write_address(pc_buffer_ID_EX[7:0]-1'b1),
+            .write_btb(write_btb),
+            .Jump(Jump_EX),
+            .Branch(Branch_EX),
+            .BranchCond(BranchCond),
+            .predicted_address_EX(predicted_address_EX[7:0]),
+            .NextPC(NextPC),
+            .reset_n(reset_n),
+            .clk(clk),
+            .flush(flush),
+            .predicted_address(predicted_address)
+        );
 endmodule
