@@ -46,8 +46,6 @@ module data_path(
     wire [`WORD_SIZE-1 :0] PCPlusOne;
     wire [`WORD_SIZE-1 :0] NextPC;
     wire [`WORD_SIZE-1 :0] Branch_target;
-    wire missed_branch_resolved;
-    assign missed_branch_resolved = (Jump_MEM||Branch_MEM)&&miss_MEM;
     assign PCPlusOne = PC + 1;
     assign Jump_target = (Jump_MEM) ? targetAddress : pc_buffer_EX_MEM;
     assign PCSrc_MUX = (PCSrc_MEM) ? buffer_A_MEM : Jump_target;
@@ -58,8 +56,8 @@ module data_path(
         if(!reset_n) begin
             PC <= 0;
         end
-        else if(!stall_enable&&!stall_IF)begin
-            if(flush||missed_branch_resolved) begin
+        else if(!stall_enable)begin
+            if(flush) begin
                 PC <= NextPC;
             end
             else  begin
@@ -69,7 +67,6 @@ module data_path(
     end
     /////////////////////////////////////////
     //IF
-    wire fetch_enable;
     assign i_address = PC;
     assign instruction = IR;
     /////////////////////////////////////////
@@ -77,29 +74,23 @@ module data_path(
     reg [`WORD_SIZE-1:0] pc_buffer_IF_ID;
     reg [`WORD_SIZE-1:0] predicted_address_ID;
     reg [`WORD_SIZE-1:0] IR;
-    reg miss_ID;
     always@(negedge reset_n or posedge clk) begin
-        if(stall_enable&&stall_IF) begin
-        end
-        else if(!reset_n || flush || stall_IF || missed_branch_resolved) begin
+        if(!reset_n || flush) begin
             IR <=`INST_BUB;
             pc_buffer_IF_ID <= 0;
             predicted_address_ID <=0;
-            miss_ID <=0;
         end
         else if(!stall_enable) begin
             IR<= i_data;
             pc_buffer_IF_ID <= PCPlusOne;
             predicted_address_ID <= predicted_address;
-            miss_ID <=miss;
         end
     end
     /////////////////////////////////////////
     //<<<<< IF/ID buffer
     //////////////////////////////////////////
     //ID
-    wire [1:0]
-         RegDst_Mux;
+    wire [1:0] RegDst_Mux;
     wire [1:0] rs;
     wire [1:0] rt;
     wire [1:0] rd;
@@ -149,10 +140,8 @@ module data_path(
     reg [3:0] ALUOp_EX;
     reg [1:0] buffer_dest_reg_EX;
     reg [11:0] target;
-    reg miss_EX;
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n ||stall_enable|| flush) begin
-            miss_EX<=0;
             SignExtendedImm <= 0;
             ZeroExtendedImm <= 0;
             predicted_address_EX <=0;
@@ -176,7 +165,6 @@ module data_path(
             isHalt_EX <=0;
         end
         else begin
-            miss_EX <= miss_ID;
             SignExtendedImm <= {{8{imm[7]}},imm};
             ZeroExtendedImm <= {{8{1'b0}},imm};
             predicted_address_EX <=predicted_address_ID;
@@ -218,11 +206,14 @@ module data_path(
     /////////////////////////////////////////
     //>>EX/MEM buffer
     reg [`WORD_SIZE-1:0] ALUOut;
-    reg [1:0] buffer_dest_reg_MEM;
+    reg [`WORD_SIZE-1:0] buffer_A_MEM;
     reg [`WORD_SIZE-1:0] buffer_write_data;
     reg [`WORD_SIZE-1:0] pc_buffer_EX_MEM;
-    reg [`WORD_SIZE-1:0] MEM_rs_for_WWD;
+    reg [`WORD_SIZE-1:0] SignExtendedImm_MEM;
+    reg [`WORD_SIZE-1:0] predicted_address_MEM;
+    reg [11:0] target_MEM;
     reg [1:0] MemtoReg_MEM;
+    reg [1:0] buffer_dest_reg_MEM;
     reg RegWrite_MEM;
     reg isWWD_MEM;
     reg MemRead_MEM;
@@ -231,16 +222,10 @@ module data_path(
     reg isHalt_MEM;
     reg Branch_MEM;
     reg Jump_MEM;
-    reg [`WORD_SIZE-1:0] SignExtendedImm_MEM;
     reg BranchCond_MEM;
-    reg [`WORD_SIZE-1:0] predicted_address_MEM;
     reg PCSrc_MEM;
-    reg [`WORD_SIZE-1:0] buffer_A_MEM;
-    reg [11:0] target_MEM;
-    reg miss_MEM;
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n||flush) begin
-            miss_MEM<=0;
             buffer_A_MEM <=0;
             PCSrc_MEM <=0;
             ALUOut <= 0;
@@ -253,7 +238,6 @@ module data_path(
             MemRead_MEM<= 0;
             MemWrite_MEM<= 0;
             isComplete_MEM<=0;
-            MEM_rs_for_WWD <=0 ;
             isHalt_MEM <=0;
             Branch_MEM <=0;
             Jump_MEM <=0;
@@ -263,7 +247,6 @@ module data_path(
             target_MEM <=0;
         end
         else  begin
-            miss_MEM <= miss_EX;
             buffer_A_MEM <=buffer_A;
             PCSrc_MEM <=PCSrc_EX;
             ALUOut <= resultOfALU;
@@ -276,7 +259,6 @@ module data_path(
             MemRead_MEM<=MemRead_EX;
             MemWrite_MEM<=MemWrite_EX;
             isComplete_MEM <= isComplete_EX;
-            MEM_rs_for_WWD <= buffer_A;
             isHalt_MEM <= isHalt_EX;
             Branch_MEM <=Branch_EX;
             Jump_MEM <=Jump_EX;
@@ -299,8 +281,7 @@ module data_path(
     reg [`WORD_SIZE-1:0] pc_buffer_MEM_WB;
     reg [`WORD_SIZE-1:0] ALUOut_WB;
     reg [`WORD_SIZE-1:0] MDR;
-    reg [`WORD_SIZE-1:0] buffer_for_WWD;
-    reg [`WORD_SIZE-1:0] WB_rs_for_WWD;
+    reg [`WORD_SIZE-1:0] buffer_A_WB;
     reg [1:0] buffer_dest_reg_WB;
     reg [1:0] MemtoReg_WB;
     reg RegWrite_WB;
@@ -312,27 +293,25 @@ module data_path(
             ALUOut_WB <= 0;
             pc_buffer_MEM_WB <= 0;
             MDR <= 0;
-            buffer_for_WWD <=0;
             buffer_dest_reg_WB <=0;
             MemtoReg_WB <=0;
             RegWrite_WB <=0;
             isWWD_WB<=0;
             isComplete_WB <=0;
-            WB_rs_for_WWD <=0;
             isHalt_WB <=0;
+            buffer_A_WB<=0;
         end
         else begin
             ALUOut_WB <= ALUOut;
             pc_buffer_MEM_WB <= pc_buffer_EX_MEM;
             MDR <=d_data;
-            buffer_for_WWD <=buffer_write_data;
             buffer_dest_reg_WB <=buffer_dest_reg_MEM;
             MemtoReg_WB <=MemtoReg_MEM;
             RegWrite_WB <=RegWrite_MEM;
             isWWD_WB<=isWWD_MEM;
             isComplete_WB <= isComplete_MEM;
-            WB_rs_for_WWD <= MEM_rs_for_WWD;
             isHalt_WB <=isHalt_MEM;
+            buffer_A_WB<=buffer_A_MEM;
         end
     end
     //<<MEM/WB buffer
@@ -348,7 +327,7 @@ module data_path(
         end
         else begin
             if(isWWD_WB) begin
-                output_port <= WB_rs_for_WWD;
+                output_port <= buffer_A_WB;
             end
             if(isComplete_WB) begin
                 num_inst <= num_inst +1;
@@ -357,53 +336,45 @@ module data_path(
     end
     //////////////////////////////////////////
     //Stall control
-    wire branch_decision;
-    assign branch_decision = Branch_EX && BranchCond;
-    wire stall_IF;
-    stall_flush sf(
-                    .rs_ID(rs),
-                    .rt_ID(rt),
-                    .dest_EX(buffer_dest_reg_EX),
-                    .dest_MEM(buffer_dest_reg_MEM),
-                    .dest_WB(buffer_dest_reg_WB),
-                    .use_rs_ID(use_rs),
-                    .use_rt_ID(use_rt),
-                    .RegWrite_EX(RegWrite_EX),
-                    .RegWrite_MEM(RegWrite_MEM),
-                    .RegWrite_WB(RegWrite_WB),
-                    .flush(flush),
-                    .Branch_MEM(Branch_MEM),
-                    .Jump_MEM(Jump_MEM),
-                    .stall_enable(stall_enable),
-                    .stall_IF(stall_IF),
-                    .miss_EX(miss_EX),
-                    .Jump_EX(Jump_EX),
-                    .Branch_EX(Branch_EX),
-                    .miss_ID(miss_ID),
-                    .Jump(Jump),
-                    .Branch(Branch)
-                );
+    stall_control sc(
+                      .rs_ID(rs),
+                      .rt_ID(rt),
+                      .dest_EX(buffer_dest_reg_EX),
+                      .dest_MEM(buffer_dest_reg_MEM),
+                      .dest_WB(buffer_dest_reg_WB),
+                      .use_rs_ID(use_rs),
+                      .use_rt_ID(use_rt),
+                      .RegWrite_EX(RegWrite_EX),
+                      .RegWrite_MEM(RegWrite_MEM),
+                      .RegWrite_WB(RegWrite_WB),
+                      .flush(flush),
+                      .Branch_MEM(Branch_MEM),
+                      .Jump_MEM(Jump_MEM),
+                      .stall_enable(stall_enable),
+                      .Jump_EX(Jump_EX),
+                      .Branch_EX(Branch_EX),
+                      .Jump(Jump),
+                      .Branch(Branch)
+                  );
     /////////////////////////////////////////////////
     //prediction
     wire flush;
     wire [`WORD_SIZE-1:0] predicted_address;
     wire [`WORD_SIZE-1:0] write_btb;
-    wire hit;
     assign write_btb = (Branch_MEM)? pc_buffer_EX_MEM +SignExtendedImm_MEM :
            (Jump_MEM) ? PCSrc_MUX : 0;
-    btb btb(
-            .pc(PC[7:0]),
-            .write_address(pc_buffer_EX_MEM[7:0]-1'b1),
-            .write_btb(write_btb),
-            .Jump(Jump_MEM),
-            .Branch(Branch_MEM),
-            .BranchCond(BranchCond_MEM),
-            .predicted_address_EX(predicted_address_MEM[7:0]),
-            .NextPC(NextPC),
-            .reset_n(reset_n),
-            .clk(clk),
-            .flush(flush),
-            .predicted_address(predicted_address),
-            .miss(miss)
-        );
+    predictor p(
+                  .pc(PC[7:0]),
+                  .write_address(pc_buffer_EX_MEM[7:0]-1'b1),
+                  .write_btb(write_btb),
+                  .Jump(Jump_MEM),
+                  .Branch(Branch_MEM),
+                  .BranchCond(BranchCond_MEM),
+                  .predicted_address_EX(predicted_address_MEM[7:0]),
+                  .NextPC(NextPC),
+                  .reset_n(reset_n),
+                  .clk(clk),
+                  .flush(flush),
+                  .predicted_address(predicted_address)
+              );
 endmodule

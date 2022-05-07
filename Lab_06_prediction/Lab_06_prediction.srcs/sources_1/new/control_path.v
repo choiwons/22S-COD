@@ -21,68 +21,68 @@ module control_path(
         output isJAL,
         output isComplete
     );
-    reg [21:0] control_bit;
-    reg [21:0] RtypeControl;
-    assign {MemtoReg,RegWrite,isWWD,MemRead,MemWrite,Branch,Jump,ALUSrc,ALUOp,RegDst,isHalt,use_rs,use_rt,isComplete,PCSrc,isJAL} = control_bit;
+    reg [20:0] control_bit;
+    reg [20:0] RtypeControl;
+    assign {MemtoReg,RegWrite,isWWD,MemRead,MemWrite,Branch,Jump,ALUSrc,ALUOp,RegDst,isHalt,use_rs,use_rt,isComplete,PCSrc} = control_bit;
     //WB:MemtoReg,RegWrite,isWWD,isComplete | M:MemRead,MemWrite | EX: Branch,Jump,ALUSrc,ALUOp,RegDst | ID:isHalt,use_rs,use_rt
     always @(*) begin
         case(opcode)
             `OPCODE_ADI:
-                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0};
             `OPCODE_ORI:
-                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd3,`OP_OR,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd3,`OP_OR,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0};
             `OPCODE_LHI:
-                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd1,`OP_IDB,2'd0,1'b0,1'b0,1'b0,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd1,`OP_IDB,2'd0,1'b0,1'b0,1'b0,1'b1,1'b0};
             `OPCODE_LWD:
-                control_bit = {2'd0,1'b1,1'b0,1'b1,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                control_bit = {2'd0,1'b1,1'b0,1'b1,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0};
             `OPCODE_SWD:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b1,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b1,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0};
             `OPCODE_BNE:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BNE,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BNE,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0};
             `OPCODE_BEQ:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BEQ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BEQ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0};
             `OPCODE_BGZ:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BGZ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BGZ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0};
             `OPCODE_BLZ:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BLZ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b1,1'b0,2'd0,`OP_BLZ,2'd0,1'b0,1'b1,1'b1,1'b1,1'b0};
             `OPCODE_JMP:
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b1,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b1,1'b0};
             `OPCODE_JAL:
-                control_bit = {2'd2,1'b1,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd2,1'b0,1'b0,1'b0,1'b1,1'b0,1'b1};
+                control_bit = {2'd2,1'b1,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd2,1'b0,1'b0,1'b0,1'b1,1'b0};
             `OPCODE_R:
                 control_bit = RtypeControl;
             default: //bubble
-                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0};
+                control_bit = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b0,1'b0};
         endcase
     end
     always @(*) begin
         case(funct)
             `FUNC_ADD:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0};
             `FUNC_AND:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_AND,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_AND,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0};
             `FUNC_HLT:
-                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd0,1'b1,1'b0,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd0,1'b1,1'b0,1'b0,1'b1,1'b0};
             `FUNC_JPR:
-                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd0,1'b0,1'b1,1'b0,1'b1,1'b1,1'b0};
+                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd0,1'b0,1'b1,1'b0,1'b1,1'b1};
             `FUNC_JRL:
-                RtypeControl = {2'd2,1'b1,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd2,1'b0,1'b1,1'b0,1'b1,1'b1,1'b1};
+                RtypeControl = {2'd2,1'b1,1'b0,1'b0,1'b0,1'b0,1'b1,2'd2,`OP_IDA,2'd2,1'b0,1'b1,1'b0,1'b1,1'b1};
             `FUNC_NOT:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_NOT,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_NOT,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0};
             `FUNC_ORR:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_OR,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_OR,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0};
             `FUNC_SHL:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ALS,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ALS,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0};
             `FUNC_SHR:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ARS,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ARS,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0};
             `FUNC_SUB:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_SUB,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_SUB,2'd1,1'b0,1'b1,1'b1,1'b1,1'b0};
             `FUNC_TCP:
-                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_TCP,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b1,1'b0,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_TCP,2'd1,1'b0,1'b1,1'b0,1'b1,1'b0};
             `FUNC_WWD:
-                RtypeControl = {2'd1,1'b0,1'b1,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b0,1'b1,1'b0,1'b0,1'b0,1'b0,2'd0,`OP_ADD,2'd0,1'b0,1'b1,1'b0,1'b1,1'b0};
             default:
-                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0};
+                RtypeControl = {2'd1,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,2'd2,`OP_ADD,2'd0,1'b0,1'b0,1'b0,1'b0,1'b0};
         endcase
     end
 endmodule

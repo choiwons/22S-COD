@@ -1,6 +1,6 @@
 
 `define MEMORY_SIZE 256
-module btb(
+module predictor(
         input [7:0] pc,
         input [7:0] write_address,
         input [7:0] write_btb,
@@ -12,8 +12,7 @@ module btb(
         input reset_n,
         input clk,
         output flush,
-        output [`WORD_SIZE-1:0] predicted_address,
-        output miss
+        output [`WORD_SIZE-1:0] predicted_address
     );
     reg [7:0] BTB [`MEMORY_SIZE-1:0] ;
     reg [`MEMORY_SIZE-1:0] enable;
@@ -22,11 +21,9 @@ module btb(
     wire JumpFail;
     assign BranchFail = (Branch&&BranchCond&&(NextPC != predicted_address_EX))
            ||(Branch&&!BranchCond&&(predicted_address_EX != write_address+1'b1));
-
     assign JumpFail = (Jump&&(NextPC != predicted_address_EX));
     assign flush = (BranchFail||JumpFail);
     assign predicted_address = (enable[pc]) ? BTB[pc] : pc+1;
-    assign miss = !enable[pc];
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n) begin
             enable <= `MEMORY_SIZE'b0;
