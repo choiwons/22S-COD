@@ -11,67 +11,26 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="131666fs"></ZoomStartTime>
-      <ZoomEndTime time="1553667fs"></ZoomEndTime>
-      <Cursor1Time time="389666fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="553001fs"></ZoomEndTime>
+      <Cursor1Time time="128000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="200"></NameColumnWidth>
-      <ValueColumnWidth column_width="80"></ValueColumnWidth>
+      <ValueColumnWidth column_width="75"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="21" />
-   <wvobject fp_name="/cpu_TB/UUT/dp/btb/flush" type="logic">
-      <obj_property name="ElementShortName">flush</obj_property>
-      <obj_property name="ObjectShortName">flush</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/num_inst" type="array">
-      <obj_property name="ElementShortName">num_inst[15:0]</obj_property>
-      <obj_property name="ObjectShortName">num_inst[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/instruction" type="array">
-      <obj_property name="ElementShortName">instruction[15:0]</obj_property>
-      <obj_property name="ObjectShortName">instruction[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/PC" type="array">
-      <obj_property name="ElementShortName">PC[15:0]</obj_property>
-      <obj_property name="ObjectShortName">PC[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/btb/predicted_address" type="array">
-      <obj_property name="ElementShortName">predicted_address[15:0]</obj_property>
-      <obj_property name="ObjectShortName">predicted_address[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/NextPC" type="array">
-      <obj_property name="ElementShortName">NextPC[15:0]</obj_property>
-      <obj_property name="ObjectShortName">NextPC[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/pc_buffer_ID_EX" type="array">
-      <obj_property name="ElementShortName">pc_buffer_ID_EX[15:0]</obj_property>
-      <obj_property name="ObjectShortName">pc_buffer_ID_EX[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/pc_buffer_EX_MEM" type="array">
-      <obj_property name="ElementShortName">pc_buffer_EX_MEM[15:0]</obj_property>
-      <obj_property name="ObjectShortName">pc_buffer_EX_MEM[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/rf/register" type="array">
-      <obj_property name="ElementShortName">register[3:0][15:0]</obj_property>
-      <obj_property name="ObjectShortName">register[3:0][15:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/Branch_EX" type="logic">
-      <obj_property name="ElementShortName">Branch_EX</obj_property>
-      <obj_property name="ObjectShortName">Branch_EX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/BranchCond" type="logic">
-      <obj_property name="ElementShortName">BranchCond</obj_property>
-      <obj_property name="ObjectShortName">BranchCond</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/NextPC" type="array">
-      <obj_property name="ElementShortName">NextPC[15:0]</obj_property>
-      <obj_property name="ObjectShortName">NextPC[15:0]</obj_property>
+   <WVObjectSize size="19" />
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/BTB" type="array">
+      <obj_property name="ElementShortName">BTB[255:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">BTB[255:0][7:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/Branch" type="logic">
       <obj_property name="ElementShortName">Branch</obj_property>
       <obj_property name="ObjectShortName">Branch</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/BranchCond" type="logic">
+      <obj_property name="ElementShortName">BranchCond</obj_property>
+      <obj_property name="ObjectShortName">BranchCond</obj_property>
    </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/BranchFail" type="logic">
       <obj_property name="ElementShortName">BranchFail</obj_property>
@@ -81,17 +40,53 @@
       <obj_property name="ElementShortName">Jump</obj_property>
       <obj_property name="ObjectShortName">Jump</obj_property>
    </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/NextPC" type="array">
-      <obj_property name="ElementShortName">NextPC[15:0]</obj_property>
-      <obj_property name="ObjectShortName">NextPC[15:0]</obj_property>
-   </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/JumpFail" type="logic">
       <obj_property name="ElementShortName">JumpFail</obj_property>
       <obj_property name="ObjectShortName">JumpFail</obj_property>
    </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/reset_n" type="logic">
+      <obj_property name="ElementShortName">reset_n</obj_property>
+      <obj_property name="ObjectShortName">reset_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/NextPC" type="array">
+      <obj_property name="ElementShortName">NextPC[7:0]</obj_property>
+      <obj_property name="ObjectShortName">NextPC[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/enable" type="array">
+      <obj_property name="ElementShortName">enable[255:0]</obj_property>
+      <obj_property name="ObjectShortName">enable[255:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/flush" type="logic">
+      <obj_property name="ElementShortName">flush</obj_property>
+      <obj_property name="ObjectShortName">flush</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/i" type="array">
+      <obj_property name="ElementShortName">i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">i[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/miss" type="logic">
+      <obj_property name="ElementShortName">miss</obj_property>
+      <obj_property name="ObjectShortName">miss</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/pc" type="array">
+      <obj_property name="ElementShortName">pc[7:0]</obj_property>
+      <obj_property name="ObjectShortName">pc[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/predicted_address" type="array">
+      <obj_property name="ElementShortName">predicted_address[15:0]</obj_property>
+      <obj_property name="ObjectShortName">predicted_address[15:0]</obj_property>
+   </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/predicted_address_EX" type="array">
       <obj_property name="ElementShortName">predicted_address_EX[7:0]</obj_property>
       <obj_property name="ObjectShortName">predicted_address_EX[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/btb/reset_n" type="logic">
+      <obj_property name="ElementShortName">reset_n</obj_property>
+      <obj_property name="ObjectShortName">reset_n</obj_property>
    </wvobject>
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/write_address" type="array">
       <obj_property name="ElementShortName">write_address[7:0]</obj_property>
@@ -100,9 +95,5 @@
    <wvobject fp_name="/cpu_TB/UUT/dp/btb/write_btb" type="array">
       <obj_property name="ElementShortName">write_btb[7:0]</obj_property>
       <obj_property name="ObjectShortName">write_btb[7:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/cpu_TB/UUT/dp/NextPC" type="array">
-      <obj_property name="ElementShortName">NextPC[15:0]</obj_property>
-      <obj_property name="ObjectShortName">NextPC[15:0]</obj_property>
    </wvobject>
 </wave_config>

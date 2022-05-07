@@ -10,11 +10,21 @@ module stall_flush(
         input RegWrite_EX,
         input RegWrite_MEM,
         input RegWrite_WB,
-        input isJAL,
         input flush,
+        input miss,
+        input Branch,
+        input Jump,
+        input Jump_MEM,
+        input miss_EX,
+        input Jump_EX,
+        input miss_ID,
+        input Branch_EX,
+        input Branch_MEM,
         output reg flush_enable,
-        output reg stall_enable
+        output reg stall_enable,
+        output stall_IF
     );
+    assign stall_IF = (miss_EX&&(Jump_EX||Branch_EX))||(miss_ID&&(Jump||Branch));
     always @(*) begin
         if(flush) begin
             stall_enable = 0;

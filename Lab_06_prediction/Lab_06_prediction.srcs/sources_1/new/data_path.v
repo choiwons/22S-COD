@@ -42,28 +42,34 @@ module data_path(
     //PC update
     reg [`WORD_SIZE-1:0] PC;
     wire [`WORD_SIZE-1 :0] PCSrc_MUX;
-    wire [`WORD_SIZE-1 :0] tarr;
+    wire [`WORD_SIZE-1 :0] Jump_target;
     wire [`WORD_SIZE-1 :0] PCPlusOne;
     wire [`WORD_SIZE-1 :0] NextPC;
+    wire [`WORD_SIZE-1 :0] Branch_target;
+    wire missed_branch_resolved;
+    assign missed_branch_resolved = (Jump_MEM||Branch_MEM)&&miss_MEM;
     assign PCPlusOne = PC + 1;
-    assign tarr = (Jump_MEM) ? targetAddress : pc_buffer_EX_MEM;
-    assign PCSrc_MUX = (PCSrc_MEM) ? buffer_A_MEM : tarr;
-    assign NextPC = (Branch_MEM&&BranchCond_MEM) ? pc_buffer_EX_MEM +SignExtendedImm_MEM : PCSrc_MUX;
+    assign Jump_target = (Jump_MEM) ? targetAddress : pc_buffer_EX_MEM;
+    assign PCSrc_MUX = (PCSrc_MEM) ? buffer_A_MEM : Jump_target;
+    assign Branch_target = pc_buffer_EX_MEM + SignExtendedImm_MEM;
+    assign NextPC = (Branch_MEM&&BranchCond_MEM) ? Branch_target : PCSrc_MUX;
+
     always @(negedge reset_n  or posedge clk) begin //every posedge clk, if PCwrite is on, update PC.
         if(!reset_n) begin
             PC <= 0;
         end
-        else if(!stall_enable) begin
-            if(flush) begin
+        else if(!stall_enable&&!stall_IF)begin
+            if(flush||missed_branch_resolved) begin
                 PC <= NextPC;
             end
-            else begin
+            else  begin
                 PC <= predicted_address;
             end
         end
     end
     /////////////////////////////////////////
     //IF
+    wire fetch_enable;
     assign i_address = PC;
     assign instruction = IR;
     /////////////////////////////////////////
@@ -71,23 +77,29 @@ module data_path(
     reg [`WORD_SIZE-1:0] pc_buffer_IF_ID;
     reg [`WORD_SIZE-1:0] predicted_address_ID;
     reg [`WORD_SIZE-1:0] IR;
+    reg miss_ID;
     always@(negedge reset_n or posedge clk) begin
-        if(!reset_n || flush) begin
+        if(stall_enable&&stall_IF) begin
+        end
+        else if(!reset_n || flush || stall_IF || missed_branch_resolved) begin
             IR <=`INST_BUB;
             pc_buffer_IF_ID <= 0;
             predicted_address_ID <=0;
+            miss_ID <=0;
         end
         else if(!stall_enable) begin
             IR<= i_data;
             pc_buffer_IF_ID <= PCPlusOne;
             predicted_address_ID <= predicted_address;
+            miss_ID <=miss;
         end
     end
     /////////////////////////////////////////
     //<<<<< IF/ID buffer
     //////////////////////////////////////////
     //ID
-    wire [1:0] RegDst_Mux;
+    wire [1:0]
+         RegDst_Mux;
     wire [1:0] rs;
     wire [1:0] rt;
     wire [1:0] rd;
@@ -99,7 +111,7 @@ module data_path(
     assign rs = IR[11:10];
     assign rt = IR[9:8];
     assign rd = IR[7:6];
-    assign RegDst_Mux = (isJAL||RegDst==2'd2) ? 2'd2 :
+    assign RegDst_Mux = (RegDst==2'd2) ? 2'd2 :
            (RegDst == 2'd0) ? rt :
            rd;
     RF rf(
@@ -137,8 +149,10 @@ module data_path(
     reg [3:0] ALUOp_EX;
     reg [1:0] buffer_dest_reg_EX;
     reg [11:0] target;
+    reg miss_EX;
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n ||stall_enable|| flush) begin
+            miss_EX<=0;
             SignExtendedImm <= 0;
             ZeroExtendedImm <= 0;
             predicted_address_EX <=0;
@@ -162,6 +176,7 @@ module data_path(
             isHalt_EX <=0;
         end
         else begin
+            miss_EX <= miss_ID;
             SignExtendedImm <= {{8{imm[7]}},imm};
             ZeroExtendedImm <= {{8{1'b0}},imm};
             predicted_address_EX <=predicted_address_ID;
@@ -222,8 +237,10 @@ module data_path(
     reg PCSrc_MEM;
     reg [`WORD_SIZE-1:0] buffer_A_MEM;
     reg [11:0] target_MEM;
+    reg miss_MEM;
     always @(negedge reset_n or posedge clk) begin
         if(!reset_n||flush) begin
+            miss_MEM<=0;
             buffer_A_MEM <=0;
             PCSrc_MEM <=0;
             ALUOut <= 0;
@@ -246,6 +263,7 @@ module data_path(
             target_MEM <=0;
         end
         else  begin
+            miss_MEM <= miss_EX;
             buffer_A_MEM <=buffer_A;
             PCSrc_MEM <=PCSrc_EX;
             ALUOut <= resultOfALU;
@@ -341,6 +359,7 @@ module data_path(
     //Stall control
     wire branch_decision;
     assign branch_decision = Branch_EX && BranchCond;
+    wire stall_IF;
     stall_flush sf(
                     .rs_ID(rs),
                     .rt_ID(rt),
@@ -353,14 +372,23 @@ module data_path(
                     .RegWrite_MEM(RegWrite_MEM),
                     .RegWrite_WB(RegWrite_WB),
                     .flush(flush),
-                    .isJAL(isJAL),
-                    .stall_enable(stall_enable)
+                    .Branch_MEM(Branch_MEM),
+                    .Jump_MEM(Jump_MEM),
+                    .stall_enable(stall_enable),
+                    .stall_IF(stall_IF),
+                    .miss_EX(miss_EX),
+                    .Jump_EX(Jump_EX),
+                    .Branch_EX(Branch_EX),
+                    .miss_ID(miss_ID),
+                    .Jump(Jump),
+                    .Branch(Branch)
                 );
     /////////////////////////////////////////////////
     //prediction
     wire flush;
     wire [`WORD_SIZE-1:0] predicted_address;
     wire [`WORD_SIZE-1:0] write_btb;
+    wire hit;
     assign write_btb = (Branch_MEM)? pc_buffer_EX_MEM +SignExtendedImm_MEM :
            (Jump_MEM) ? PCSrc_MUX : 0;
     btb btb(
@@ -375,6 +403,7 @@ module data_path(
             .reset_n(reset_n),
             .clk(clk),
             .flush(flush),
-            .predicted_address(predicted_address)
+            .predicted_address(predicted_address),
+            .miss(miss)
         );
 endmodule
