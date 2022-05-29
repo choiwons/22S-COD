@@ -20,9 +20,13 @@ module data_path(
         input isComplete,
         input PCSrc,
         input isJAL,
+        input i_readM,
         //<<refer to control path
-        input [`WORD_SIZE-1:0] i_data,
-        input [`WORD_SIZE-1:0] d_data,
+        input DMA_begin,
+        input [`LINE_SIZE-1:0] i_data,
+        input [`LINE_SIZE-1:0] d_data,
+        input BR,
+        output BG,
         output d_readM,
         output d_writeM,
         output [`WORD_SIZE-1:0] instruction,
@@ -34,7 +38,6 @@ module data_path(
     );
     //////////////////////////////////////////
     //wire
-    wire stall_enable;
     wire [`WORD_SIZE-1:0] targetAddress;
     wire BranchCond;
     wire [`WORD_SIZE-1:0] resultOfALU;
@@ -56,34 +59,48 @@ module data_path(
         if(!reset_n) begin
             PC <= 0;
         end
-        else if(!stall_enable)begin
-            if(flush) begin
-                PC <= NextPC;
-            end
-            else  begin
-                PC <= predicted_address;
-            end
+        if(flush_IF) begin
+            PC <= NextPC;
+        end
+        else if(!stall_IF) begin
+            PC <= predicted_address;
         end
     end
     /////////////////////////////////////////
     //IF
-    assign i_address = PC;
     assign instruction = IR;
+    wire [`WORD_SIZE-1:0] i_cache_data;
+    wire i_ready;
+    i_cache ic(
+                .reset_n(reset_n),
+                .clk(clk),
+                .i_address(i_address),
+                .PC(PC),
+                .i_data(i_data),
+                .i_readM(i_readM),
+                .i_cache_data(i_cache_data),
+                .i_ready(i_ready),
+                .flush(flush_IF),
+                .stall(stall_IF)
+            );
     /////////////////////////////////////////
     //>>> IF/ID buffer
     reg [`WORD_SIZE-1:0] pc_buffer_IF_ID;
     reg [`WORD_SIZE-1:0] predicted_address_ID;
     reg [`WORD_SIZE-1:0] IR;
+    reg valid_inst_ID;
     always@(negedge reset_n or posedge clk) begin
-        if(!reset_n || flush) begin
+        if(!reset_n || flush_ID) begin
             IR <=`INST_BUB;
             pc_buffer_IF_ID <= 0;
             predicted_address_ID <=0;
+            valid_inst_ID <=0;
         end
-        else if(!stall_enable) begin
-            IR<= i_data;
+        else if(!stall_ID) begin
+            IR<= i_cache_data;
             pc_buffer_IF_ID <= PCPlusOne;
             predicted_address_ID <= predicted_address;
+            valid_inst_ID <=1;
         end
     end
     /////////////////////////////////////////
@@ -136,12 +153,13 @@ module data_path(
     reg PCSrc_EX;
     reg isComplete_EX;
     reg isHalt_EX;
+    reg valid_inst_EX;
     reg [1:0] ALUSrc_EX;
     reg [3:0] ALUOp_EX;
     reg [1:0] buffer_dest_reg_EX;
     reg [11:0] target;
     always @(negedge reset_n or posedge clk) begin
-        if(!reset_n ||stall_enable|| flush) begin
+        if(!reset_n || flush_EX) begin
             SignExtendedImm <= 0;
             ZeroExtendedImm <= 0;
             predicted_address_EX <=0;
@@ -163,8 +181,9 @@ module data_path(
             isComplete_EX <=0;
             PCSrc_EX <=0;
             isHalt_EX <=0;
+            valid_inst_EX <=0;
         end
-        else begin
+        else if(!stall_EX) begin
             SignExtendedImm <= {{8{imm[7]}},imm};
             ZeroExtendedImm <= {{8{1'b0}},imm};
             predicted_address_EX <=predicted_address_ID;
@@ -186,6 +205,7 @@ module data_path(
             isComplete_EX <=isComplete;
             PCSrc_EX <= PCSrc;
             isHalt_EX <= isHalt;
+            valid_inst_EX <= valid_inst_ID;
         end
     end
     // <<<< ID/EX buffer
@@ -225,11 +245,11 @@ module data_path(
     reg BranchCond_MEM;
     reg PCSrc_MEM;
     always @(negedge reset_n or posedge clk) begin
-        if(!reset_n||flush) begin
+        if(!reset_n||flush_MEM) begin
             buffer_A_MEM <=0;
             PCSrc_MEM <=0;
             ALUOut <= 0;
-            buffer_dest_reg_EX <=0;
+            buffer_dest_reg_MEM <=0;
             buffer_write_data <=0;
             pc_buffer_EX_MEM <= 0;
             MemtoReg_MEM <= 0;
@@ -246,7 +266,7 @@ module data_path(
             predicted_address_MEM <=0;
             target_MEM <=0;
         end
-        else  begin
+        else if(!stall_MEM) begin
             buffer_A_MEM <=buffer_A;
             PCSrc_MEM <=PCSrc_EX;
             ALUOut <= resultOfALU;
@@ -272,10 +292,26 @@ module data_path(
     /////////////////////////////////////////
     //MEM
     assign targetAddress = {pc_buffer_EX_MEM[15:12],target_MEM[11:0]};
-    assign d_address = ALUOut;
-    assign d_data = (MemWrite_MEM) ? buffer_write_data : 16'bz;
-    assign d_readM  = MemRead_MEM;
-    assign d_writeM  = MemWrite_MEM;
+    wire d_ready;
+    wire [`WORD_SIZE-1:0] d_cache_data;
+    wire stall_DMA;
+    wire use_memory;
+    d_cache dc(
+                .clk(clk),
+                .reset_n(reset_n),
+                .d_address(d_address),
+                .write_target_address(ALUOut),
+                .write_data(buffer_write_data),
+                .d_data(d_data),
+                .d_readM(d_readM),
+                .d_writeM(d_writeM),
+                .MemRead_MEM(MemRead_MEM),
+                .MemWrite_MEM(MemWrite_MEM),
+                .stall_DMA(stall_DMA),
+                .d_cache_data(d_cache_data),
+                .d_ready(d_ready),
+                .use_memory(use_memory)
+            );
     /////////////////////////////////////////
     //>>MEM/WB buffer
     reg [`WORD_SIZE-1:0] pc_buffer_MEM_WB;
@@ -289,7 +325,7 @@ module data_path(
     reg isComplete_WB;
     reg isHalt_WB;
     always @(negedge reset_n or posedge clk) begin
-        if(!reset_n) begin
+        if(!reset_n||flush_WB) begin
             ALUOut_WB <= 0;
             pc_buffer_MEM_WB <= 0;
             MDR <= 0;
@@ -304,7 +340,7 @@ module data_path(
         else begin
             ALUOut_WB <= ALUOut;
             pc_buffer_MEM_WB <= pc_buffer_EX_MEM;
-            MDR <=d_data;
+            MDR <=d_cache_data;
             buffer_dest_reg_WB <=buffer_dest_reg_MEM;
             MemtoReg_WB <=MemtoReg_MEM;
             RegWrite_WB <=RegWrite_MEM;
@@ -336,8 +372,19 @@ module data_path(
     end
     //////////////////////////////////////////
     //Stall control
-    wire flush;
+    wire flush_IF;
+    wire flush_ID;
+    wire flush_EX;
+    wire flush_MEM;
+    wire flush_WB;
+    wire stall_IF;
+    wire stall_ID;
+    wire stall_EX;
+    wire stall_MEM;
+    wire stall_WB;
     hazard_control sc(
+                       .reset_n(reset_n),
+                       .clk(clk),
                        .rs_ID(rs),
                        .rt_ID(rt),
                        .dest_EX(buffer_dest_reg_EX),
@@ -348,16 +395,34 @@ module data_path(
                        .RegWrite_EX(RegWrite_EX),
                        .RegWrite_MEM(RegWrite_MEM),
                        .RegWrite_WB(RegWrite_WB),
-                       .flush(flush),
+                       .flush_IF(flush_IF),
+                       .flush_ID(flush_ID),
+                       .flush_EX(flush_EX),
+                       .flush_MEM(flush_MEM),
+                       .flush_WB(flush_WB),
                        .Branch_MEM(Branch_MEM),
                        .Jump_MEM(Jump_MEM),
-                       .stall_enable(stall_enable),
                        .Jump_EX(Jump_EX),
                        .Branch_EX(Branch_EX),
                        .Jump(Jump),
                        .Branch(Branch),
                        .predicted_address_MEM(predicted_address_MEM),
-                       .NextPC(NextPC)
+                       .NextPC(NextPC),
+                       .stall_IF(stall_IF),
+                       .stall_ID(stall_ID),
+                       .stall_EX(stall_EX),
+                       .stall_MEM(stall_MEM),
+                       .stall_WB(stall_WB),
+                       .MemWrite_MEM(MemWrite_MEM),
+                       .MemRead_MEM(MemRead_MEM),
+                       .valid_inst_EX(valid_inst_EX),
+                       .valid_inst_ID(valid_inst_ID),
+                       .i_ready(i_ready),
+                       .d_ready(d_ready),
+                       .BR(BR),
+                       .BG(BG),
+                       .stall_DMA(stall_DMA),
+                       .use_memory(use_memory)
                    );
     /////////////////////////////////////////////////
     //prediction

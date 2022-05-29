@@ -1,0 +1,169 @@
+`include <opcodes.v>
+module hazard_control(
+        input reset_n,
+        input clk,
+        input [1:0] rs_ID,
+        input [1:0] rt_ID,
+        input [1:0] dest_EX,
+        input [1:0] dest_MEM,
+        input [1:0] dest_WB,
+        input use_rs_ID,
+        input use_rt_ID,
+        input RegWrite_EX,
+        input RegWrite_MEM,
+        input RegWrite_WB,
+        input Branch,
+        input Jump,
+        input Jump_MEM,
+        input Jump_EX,
+        input Branch_EX,
+        input Branch_MEM,
+        input [`WORD_SIZE-1:0] predicted_address_MEM,
+        input [`WORD_SIZE-1:0] NextPC,
+        input d_readM,
+        input d_writeM,
+        input i_readM,
+        input valid_inst_EX,
+        input valid_inst_ID,
+        output stall_IF,
+        output stall_ID,
+        output stall_EX,
+        output stall_MEM,
+        output stall_WB,
+        output flush_IF,
+        output flush_ID,
+        output flush_EX,
+        output flush_MEM,
+        output flush_WB
+    );
+    reg [1:0] ls_counter;
+    reg [1:0] fetch_counter;
+    wire data_hazard;
+    wire control_hazard;
+    wire ls_hazard;
+    wire fetch_hazard;
+    wire [3:0] hazards;
+    wire [1:0] valid_inst;
+    reg [4:0] stall;
+    reg [4:0] flush;
+    assign valid_inst = {valid_inst_ID,valid_inst_EX};
+    assign {flush_IF,flush_ID,flush_EX,flush_MEM,flush_WB} =flush;
+    assign {stall_IF,stall_ID,stall_EX,stall_MEM,stall_WB} =stall;
+
+    assign control_hazard = (Jump_MEM||Branch_MEM)&&(predicted_address_MEM!=NextPC);
+    assign data_hazard = (rs_ID==dest_EX&&use_rs_ID&&RegWrite_EX)
+           || (rt_ID==dest_EX&&use_rt_ID&&RegWrite_EX)
+           || (rs_ID==dest_MEM&&use_rs_ID&&RegWrite_MEM)
+           || (rt_ID==dest_MEM&&use_rt_ID&&RegWrite_MEM)
+           || (rs_ID==dest_WB&&use_rs_ID&&RegWrite_WB)
+           || (rt_ID==dest_WB&&use_rt_ID&&RegWrite_WB);
+    assign fetch_hazard = (i_readM&&(fetch_counter != 2'b01));
+    assign ls_hazard = (d_writeM&&(ls_counter != 2'b01))||(d_readM&&(ls_counter!=2'b01));
+
+    assign hazards = {fetch_hazard,ls_hazard,control_hazard,data_hazard};
+    //load process
+    always @(negedge reset_n or posedge clk) begin
+        if(!reset_n) begin
+            ls_counter <= 0;
+        end
+        else begin
+            ls_counter <= (!d_readM&&!d_writeM) ? 2'd0 :
+                       (ls_counter == 2'd0) ? 2'd1 : 2'd0;
+        end
+    end
+    //instruction fetching process
+    always @(negedge reset_n or posedge clk) begin
+        if(!reset_n) begin
+            fetch_counter <= 0;
+        end
+        else begin
+            fetch_counter <= (!i_readM&&!stall_IF&&!flush_IF) ? 2'd0 :
+                          (fetch_counter == 2'd0) ? 2'd1 : 2'd0;
+        end
+    end
+
+    always @(*) begin
+        case(hazards)
+            4'b0000: begin
+                flush = 5'b00000;
+                stall = 5'b00000;
+            end
+            4'b0001 : begin
+                flush = 5'b00100;
+                stall = 5'b11000;
+            end
+            4'b0010 : begin
+                flush = 5'b11110;
+                stall = 5'b00000;
+            end
+            4'b0011 : begin
+                flush = 5'b11110;
+                stall = 5'b00000;
+            end
+            4'b0100 : begin
+                case(valid_inst)
+                    2'b00: begin
+                        flush = 5'b00001;
+                        stall = 5'b00010;
+                    end
+                    2'b01: begin
+                        flush = 5'b00001;
+                        stall = 5'b00110;
+                    end
+                    2'b10: begin
+                        flush = 5'b00001;
+                        stall = 5'b00010;
+                    end
+                    2'b11: begin
+                        flush = 5'b00001;
+                        stall = 5'b11110;
+                    end
+                endcase
+            end
+            4'b0101 : begin
+                flush = 5'b00001;
+                stall = 5'b11110;
+            end
+            4'b1000 : begin
+                flush = 5'b01000;
+                stall = 5'b10000;
+            end
+            4'b1001 : begin
+                flush = 5'b00100;
+                stall = 5'b11000;
+            end
+            4'b1010 : begin
+                flush = 5'b00001;
+                stall = 5'b11110;
+            end
+            4'b1011 : begin
+                flush = 5'b00001;
+                stall = 5'b11110;
+            end
+            4'b1100 : begin
+                case(valid_inst)
+                    2'b00: begin
+                        flush = 5'b00001;
+                        stall = 5'b11110;
+                    end
+                    2'b01: begin
+                        flush = 5'b00001;
+                        stall = 5'b11110;
+                    end
+                    2'b10: begin
+                        flush = 5'b01001;
+                        stall = 5'b10010;
+                    end
+                    2'b11: begin
+                        flush = 5'b00001;
+                        stall = 5'b11110;
+                    end
+                endcase
+            end
+            4'b1101 : begin
+                flush = 5'b00001;
+                stall = 5'b11110;
+            end
+        endcase
+    end
+endmodule

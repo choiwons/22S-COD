@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="cpu_TB_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="cpu_TB" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="129348000fs"></ZoomStartTime>
+      <ZoomEndTime time="130560001fs"></ZoomEndTime>
+      <Cursor1Time time="129550000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="150"></NameColumnWidth>
+      <ValueColumnWidth column_width="72"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="25" />
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/pc" type="array">
+      <obj_property name="ElementShortName">pc[7:0]</obj_property>
+      <obj_property name="ObjectShortName">pc[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/write_address" type="array">
+      <obj_property name="ElementShortName">write_address[7:0]</obj_property>
+      <obj_property name="ObjectShortName">write_address[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/write_btb" type="array">
+      <obj_property name="ElementShortName">write_btb[7:0]</obj_property>
+      <obj_property name="ObjectShortName">write_btb[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BHT" type="array">
+      <obj_property name="ElementShortName">BHT[255:0][1:0]</obj_property>
+      <obj_property name="ObjectShortName">BHT[255:0][1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BTB" type="array">
+      <obj_property name="ElementShortName">BTB[255:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">BTB[255:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/NextPC" type="array">
+      <obj_property name="ElementShortName">NextPC[7:0]</obj_property>
+      <obj_property name="ObjectShortName">NextPC[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/Jump" type="logic">
+      <obj_property name="ElementShortName">Jump</obj_property>
+      <obj_property name="ObjectShortName">Jump</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/Branch" type="logic">
+      <obj_property name="ElementShortName">Branch</obj_property>
+      <obj_property name="ObjectShortName">Branch</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BranchCond" type="logic">
+      <obj_property name="ElementShortName">BranchCond</obj_property>
+      <obj_property name="ObjectShortName">BranchCond</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/predicted_address_MEM" type="array">
+      <obj_property name="ElementShortName">predicted_address_MEM[7:0]</obj_property>
+      <obj_property name="ObjectShortName">predicted_address_MEM[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/reset_n" type="logic">
+      <obj_property name="ElementShortName">reset_n</obj_property>
+      <obj_property name="ObjectShortName">reset_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/IR" type="array">
+      <obj_property name="ElementShortName">IR[15:0]</obj_property>
+      <obj_property name="ObjectShortName">IR[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/PC" type="array">
+      <obj_property name="ElementShortName">PC[15:0]</obj_property>
+      <obj_property name="ObjectShortName">PC[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/flush_enable" type="logic">
+      <obj_property name="ElementShortName">flush_enable</obj_property>
+      <obj_property name="ObjectShortName">flush_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/instruction" type="array">
+      <obj_property name="ElementShortName">instruction[15:0]</obj_property>
+      <obj_property name="ObjectShortName">instruction[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/branch_counter" type="array">
+      <obj_property name="ElementShortName">branch_counter[10:0]</obj_property>
+      <obj_property name="ObjectShortName">branch_counter[10:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/miss_counter" type="array">
+      <obj_property name="ElementShortName">miss_counter[10:0]</obj_property>
+      <obj_property name="ObjectShortName">miss_counter[10:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/predicted_address" type="array">
+      <obj_property name="ElementShortName">predicted_address[15:0]</obj_property>
+      <obj_property name="ObjectShortName">predicted_address[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BTB" type="array">
+      <obj_property name="ElementShortName">BTB[255:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">BTB[255:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BHT" type="array">
+      <obj_property name="ElementShortName">BHT[255:0][1:0]</obj_property>
+      <obj_property name="ObjectShortName">BHT[255:0][1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/enable" type="array">
+      <obj_property name="ElementShortName">enable[255:0]</obj_property>
+      <obj_property name="ObjectShortName">enable[255:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/i" type="array">
+      <obj_property name="ElementShortName">i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">i[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/BranchFail" type="logic">
+      <obj_property name="ElementShortName">BranchFail</obj_property>
+      <obj_property name="ObjectShortName">BranchFail</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cpu_TB/UUT/dp/p/JumpFail" type="logic">
+      <obj_property name="ElementShortName">JumpFail</obj_property>
+      <obj_property name="ObjectShortName">JumpFail</obj_property>
+   </wvobject>
+</wave_config>
